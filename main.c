@@ -103,6 +103,4 @@ int main() {
             strcpy(queue[m++], stack[--k]);
         }
     }
-
-    printf("2");
 }
