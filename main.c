@@ -63,23 +63,46 @@ int main() {
     int z = 0;  // pointer for number
 
     while (fgets(inp, MAXSIZE, fr)) {
-        for (int i = 0; i < strlen(inp) - 1; i++) {  // last char of a line is '\n' - don't make sense for us
+        for (int i = 0; i < strlen(inp); i++) {
             if (inp[i] >= '0' && inp[i] <= '9') {  // is a digit?
                 n[z++] = inp[i];
             }
             else if (inOperators(&inp[i])) {  // is an operator?
+                char operator = inp[i];
+
                 if (z != 0) {  // if number is not empty
-                    strcat(queue[m++], n);
+                    strcpy(queue[m++], n);
                     cleanNumber(n, &z);
                 }
 
                 if (k == 0) {  // if stack is empty
-                    strcat(stack[k++], &inp[i]);
+                    strcpy(stack[k++], &operator);
                 }
                 else {
-
+                    while (k > 0) {
+                        if (precedence(&inp[i]) < precedence(stack[k - 1])) {
+                            strcpy(stack[k++], &operator);
+                            break;
+                        }
+                        else if (precedence(&inp[i]) >= precedence(stack[k - 1])) {
+                            strcpy(queue[m++], stack[--k]);
+                        }
+                    }
+                    if (k == 0) {  // need optimization XD
+                        strcpy(stack[k++], &operator);
+                    }
                 }
             }
         }
+
+        if (z != 0) {  // if number is not empty
+            strcpy(queue[m++], n);
+            cleanNumber(n, &z);
+        }
+        while (k >= 0) {
+            strcpy(queue[m++], stack[--k]);
+        }
     }
+
+    printf("2");
 }
