@@ -6,4 +6,6 @@ In other words, make the job for our "3" grade.
 
 Read the input lines and output the answers for the expressions using reversed polish notation.
 
+Seems to be done.
+
 ### Made by Pasha M. and Maksim A.
