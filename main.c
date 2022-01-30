@@ -46,6 +46,51 @@ int precedence(const char* op) {
     }
 }
 
+// function, that perform the operations in queue
+// it is really awful optimized!!!
+void doTheOperation(char queue[MAXSIZE][MAXSIZE], const char *op, int *x) {
+    int num = 0;
+    char snum[MAXSIZE] = { 0 };
+
+    int n1 = 0;  // first number
+    int n2 = 0;  // second number
+    int k = *x - 1;  // index, used to search numbers in RPN
+
+    // find second number n2 and clean the space in queue[k]
+    while (!(queue[k][0] >= '0' && queue[k][0] <= '9')) {
+        --k;
+    }
+    n2 = atoi(queue[k]);
+    strcpy(queue[k], snum);
+
+    // find first number n1 and clean the space in queue[k]
+    while (!(queue[k][0] >= '0' && queue[k][0] <= '9')) {
+        --k;
+    }
+    n1 = atoi(queue[k]);
+    strcpy(queue[k], snum);
+
+    // perform the operation
+    if (*op == '*') {
+        num = n1 * n2;
+    }
+    else if (*op == '/') {
+        num = n1 / n2;
+    }
+    else if (*op == '+') {
+        num = n1 + n2;
+    }
+    else if (*op == '-') {
+        num = n1 - n2;
+    }
+
+    // convert int to string format, 10 - base of a number (decimal)
+    itoa(num, snum, 10);
+
+    // place the calculated number in queue instead of operation sign
+    strcpy(queue[*x], snum);
+}
+
 
 int main() {
     // input here your own files destination
@@ -79,7 +124,7 @@ int main() {
                     strcpy(stack[k++], &operator);
                 }
                 else {
-                    while (k > 0) {
+                    while (k > 0) {  // if stack is not empty
                         if (precedence(&inp[i]) < precedence(stack[k - 1])) {
                             strcpy(stack[k++], &operator);
                             break;
@@ -95,12 +140,24 @@ int main() {
             }
         }
 
-        if (z != 0) {  // if number is not empty
+        if (z != 0) {  // push the remaining number, if there is one
             strcpy(queue[m++], n);
             cleanNumber(n, &z);
         }
-        while (k >= 0) {
+        while (k > 0) {  // push the remaining operations
             strcpy(queue[m++], stack[--k]);
         }
+
+        // calculate RPN (reversed polish notation)
+        int x = 0;
+        while (x < m) {
+            if (inOperators(queue[x])) {
+                doTheOperation(queue, queue[x], &x);
+            }
+            x++;
+        }
+
+        // print out the result in output.txt file
+        fprintf(fw, "%d\n", atoi(queue[x - 1]));
     }
 }
