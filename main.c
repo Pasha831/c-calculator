@@ -18,10 +18,9 @@ int inOperators(const char *inp) {
 }
 
 // clean the number string and set z (pointer) to 0
-void cleanNumber(char *n, int *z) {
-    for (int i = 0; i < *z; i++) {
-        n[i] = '\0';
-    }
+void addNumber(char queue[MAXSIZE][MAXSIZE], char *n, int *z, int *m) {
+    n[*z] = 0;
+    strcpy(queue[(*m)++], n);
     *z = 0;
 }
 
@@ -46,61 +45,47 @@ int precedence(const char* op) {
     }
 }
 
-// function, that perform the operations in queue
-// it is really awful optimized!!!
-void doTheOperation(char queue[MAXSIZE][MAXSIZE], const char *op, int *x) {
-    int num = 0;
-    char snum[MAXSIZE] = { 0 };
+// function, that performs calculations from reversed polish notation
+double calculate(char polish[MAXSIZE][MAXSIZE], int n) {
 
-    int n1 = 0;  // first number
-    int n2 = 0;  // second number
-    int k = *x - 1;  // index, used to search numbers in RPN
+    double* stack = (double*)calloc(n, sizeof(double));
+    int count = 0;
 
-    // find second number n2 and clean the space in queue[k]
-    while (!(queue[k][0] >= '0' && queue[k][0] <= '9')) {
-        --k;
-    }
-    n2 = atoi(queue[k]);
-    strcpy(queue[k], snum);
-
-    // find first number n1 and clean the space in queue[k]
-    while (!(queue[k][0] >= '0' && queue[k][0] <= '9')) {
-        --k;
-    }
-    n1 = atoi(queue[k]);
-    strcpy(queue[k], snum);
-
-    // perform the operation
-    if (*op == '*') {
-        num = n1 * n2;
-    }
-    else if (*op == '/') {
-        num = n1 / n2;
-    }
-    else if (*op == '+') {
-        num = n1 + n2;
-    }
-    else if (*op == '-') {
-        num = n1 - n2;
+    for (int i = 0; i < n; ++i){
+        if (polish[i][0] >= '0' && polish[i][0] <= '9'){
+            stack[count] = strtod(polish[i], 0);
+            count++;
+        }
+        else{
+            if (polish[i][0] == '+') {
+                stack[count - 2] += stack[count - 1];
+            } else if (polish[i][0] == '-') {
+                stack[count - 2] -= stack[count - 1];
+            } else if (polish[i][0] == '*') {
+                stack[count - 2] *= stack[count - 1];
+            } else if (polish[i][0] == '/') {
+                stack[count - 2] /= stack[count - 1];
+            }
+            stack[count - 1] = 0;
+            count--;
+        }
     }
 
-    // convert int to string format, 10 - base of a number (decimal)
-    itoa(num, snum, 10);
-
-    // place the calculated number in queue instead of operation sign
-    strcpy(queue[*x], snum);
+    double res = stack[0];
+    free(stack);
+    return res;
 }
 
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calc\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calc\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calc\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calc\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
-    char stack[MAXSIZE][MAXSIZE] = { 0 };
-    char queue[MAXSIZE][MAXSIZE] = { 0 };
+    char stack[MAXSIZE][MAXSIZE] = { 0 };  // operation stack
+    char queue[MAXSIZE][MAXSIZE] = { 0 };  // reversed polish notation
     int k = 0;  // pointer for stack
     int m = 0;  // pointer for queue
 
@@ -109,15 +94,17 @@ int main() {
 
     while (fgets(inp, MAXSIZE, fr)) {
         for (int i = 0; i < strlen(inp); i++) {
-            if (inp[i] >= '0' && inp[i] <= '9') {  // is a digit?
+            if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == ',') {  // is a part of a digit?
+                if (inp[i] == ','){
+                    inp[i] = '.';
+                }
                 n[z++] = inp[i];
             }
             else if (inOperators(&inp[i])) {  // is an operator?
                 char operator = inp[i];
 
                 if (z != 0) {  // if number is not empty
-                    strcpy(queue[m++], n);
-                    cleanNumber(n, &z);
+                    addNumber(queue, n, &z, &m);
                 }
 
                 if (k == 0) {  // if stack is empty
@@ -141,24 +128,17 @@ int main() {
         }
 
         if (z != 0) {  // push the remaining number, if there is one
-            strcpy(queue[m++], n);
-            cleanNumber(n, &z);
+            addNumber(queue, n, &z, &m);
         }
         while (k > 0) {  // push the remaining operations
             strcpy(queue[m++], stack[--k]);
         }
 
         // calculate RPN (reversed polish notation)
-        int x = 0;
-        while (x < m) {
-            if (inOperators(queue[x])) {
-                doTheOperation(queue, queue[x], &x);
-            }
-            x++;
-        }
+        double res = calculate(queue, m);
 
         // print out the result in output.txt file
-        fprintf(fw, "%d\n", atoi(queue[x - 1]));
+        fprintf(fw, "%lf\n", res);
     }
 
     return 0;
