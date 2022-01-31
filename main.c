@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #define MAXSIZE 100  // max size of input string
 
 FILE *fr;
@@ -8,8 +9,8 @@ FILE *fw;
 
 // is an operator?
 int inOperators(const char *inp) {
-    // we have to add other operators, like: '(', ')', '^'
-    if (*inp == '+' || *inp == '-' || *inp == '*' || *inp == '/') {
+    // we have to add other operators, like: '(', ')'
+    if (*inp == '+' || *inp == '-' || *inp == '*' || *inp == '/' || *inp == '^') {
         return 1;
     }
     else {
@@ -65,6 +66,8 @@ double calculate(char polish[MAXSIZE][MAXSIZE], int n) {
                 stack[count - 2] *= stack[count - 1];
             } else if (polish[i][0] == '/') {
                 stack[count - 2] /= stack[count - 1];
+            } else if (polish[i][0] == '^') {
+                stack[count - 2] = pow(stack[count - 2], stack[count - 1]);
             }
             stack[count - 1] = 0;
             count--;
