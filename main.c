@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAXSIZE 1000  // max size of input string
+#define MAXSIZE 100  // max size of input string
 
 FILE *fr;
 FILE *fw;
@@ -94,8 +94,8 @@ void doTheOperation(char queue[MAXSIZE][MAXSIZE], const char *op, int *x) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\medve\\CLionProjects\\c-calc\\c-calculator\\input.txt", "r");
-    fw = fopen("C:\\Users\\medve\\CLionProjects\\c-calc\\c-calculator\\output.txt", "w");
+    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
