@@ -18,10 +18,9 @@ int inOperators(const char *inp) {
 }
 
 // clean the number string and set z (pointer) to 0
-void cleanNumber(char *n, int *z) {
-    for (int i = 0; i < *z; i++) {
-        n[i] = '\0';
-    }
+void addNumber(char queue[MAXSIZE][MAXSIZE], char *n, int *z, int *m) {
+    n[*z] = 0;
+    strcpy(queue[(*m)++], n);
     *z = 0;
 }
 
@@ -94,13 +93,13 @@ void doTheOperation(char queue[MAXSIZE][MAXSIZE], const char *op, int *x) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calc\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calc\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
-    char stack[MAXSIZE][MAXSIZE] = { 0 };
-    char queue[MAXSIZE][MAXSIZE] = { 0 };
+    char stack[MAXSIZE][MAXSIZE] = { 0 };  // operation stack
+    char queue[MAXSIZE][MAXSIZE] = { 0 };  // reversed polish notation
     int k = 0;  // pointer for stack
     int m = 0;  // pointer for queue
 
@@ -116,8 +115,7 @@ int main() {
                 char operator = inp[i];
 
                 if (z != 0) {  // if number is not empty
-                    strcpy(queue[m++], n);
-                    cleanNumber(n, &z);
+                    addNumber(queue, n, &z, &m);
                 }
 
                 if (k == 0) {  // if stack is empty
@@ -141,8 +139,7 @@ int main() {
         }
 
         if (z != 0) {  // push the remaining number, if there is one
-            strcpy(queue[m++], n);
-            cleanNumber(n, &z);
+            addNumber(queue, n, &z, &m);
         }
         while (k > 0) {  // push the remaining operations
             strcpy(queue[m++], stack[--k]);
