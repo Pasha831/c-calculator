@@ -94,8 +94,8 @@ void doTheOperation(char queue[MAXSIZE][MAXSIZE], const char *op, int *x) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calc\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calc\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
@@ -160,4 +160,6 @@ int main() {
         // print out the result in output.txt file
         fprintf(fw, "%d\n", atoi(queue[x - 1]));
     }
+
+    return 0;
 }
