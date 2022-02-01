@@ -10,7 +10,7 @@ FILE *fw;
 // is an operator?
 int inOperators(const char *inp) {
     // we have to add other operators, like: '(', ')'
-    if (*inp == '+' || *inp == '-' || *inp == '*' || *inp == '/' || *inp == '^') {
+    if (*inp == '+' || *inp == '-' || *inp == '*' || *inp == '/' || *inp == '^' || *inp == '(' || *inp == ')') {
         return 1;
     }
     else {
@@ -18,7 +18,7 @@ int inOperators(const char *inp) {
     }
 }
 
-// clean the number string and set z (pointer) to 0
+// push number to queue, then clean the number string and set z (pointer) to 0
 void addNumber(char queue[MAXSIZE][MAXSIZE], char *n, int *z, int *m) {
     n[*z] = 0;
     strcpy(queue[(*m)++], n);
@@ -82,8 +82,8 @@ double calculate(char polish[MAXSIZE][MAXSIZE], int n) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
@@ -115,7 +115,19 @@ int main() {
                 }
                 else {
                     while (k > 0) {  // if stack is not empty
-                        if (precedence(&inp[i]) < precedence(stack[k - 1])) {
+                        if (operator == '(') {  // simply add '(' to stack
+                            strcpy(stack[k++], &operator);
+                            break;
+                        }
+                        else if (operator == ')') {  // pop all operators from stack until '('
+                            while (strcmp(stack[--k], "(") != 0) {  // while we haven't found '('
+                                strcpy(queue[m++], stack[k]);  // pop operator
+                                strcpy(stack[k], "\0");  // clean the position
+                            }
+                            strcpy(stack[k], "\0");  // when we reached '(': clean '('
+                            break;  // then break the search
+                        }
+                        else if (precedence(&inp[i]) < precedence(stack[k - 1]) || stack[k - 1][0] == '(') {  // if previous operator is '(' - add it anyway
                             strcpy(stack[k++], &operator);
                             break;
                         }
@@ -123,7 +135,7 @@ int main() {
                             strcpy(queue[m++], stack[--k]);
                         }
                     }
-                    if (k == 0) {  // need optimization XD
+                    if (k == 0 && operator != ')') {  // no need to add ')' at stack
                         strcpy(stack[k++], &operator);
                     }
                 }
@@ -143,6 +155,4 @@ int main() {
         // print out the result in output.txt file
         fprintf(fw, "%lf\n", res);
     }
-
-    printf("Hello World!\n");
 }
