@@ -62,22 +62,23 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
             n[z++] = inp[i];
         }
         else if (inOperators(&inp[i])) {  // is an operator?
-            char operator = inp[i];
+            char operator[MAXSIZE] = { 0 };
+            operator[0] = inp[i];
 
             if (z != 0) {  // if number is not empty
                 addNumber(polish, n, &z, m);
             }
 
             if (k == 0) {  // if stack is empty
-                strcpy(stack[k++], &operator);
+                strcpy(stack[k++], operator);
             }
             else {
                 while (k > 0) {  // if stack is not empty
-                    if (operator == '(') {  // simply add '(' to stack
-                        strcpy(stack[k++], &operator);
+                    if (operator[0] == '(') {  // simply add '(' to stack
+                        strcpy(stack[k++], operator);
                         break;
                     }
-                    else if (operator == ')') {  // pop all operators from stack until '('
+                    else if (operator[0] == ')') {  // pop all operators from stack until '('
                         while (strcmp(stack[--k], "(") != 0 && k > 0) {  // while we haven't found '('
                             strcpy(polish[(*m)++], stack[k]);  // pop operator
                             strcpy(stack[k], "\0");  // clean the position
@@ -86,15 +87,15 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
                         break;  // then break the search
                     }
                     else if (precedence(&inp[i]) < precedence(stack[k - 1]) || stack[k - 1][0] == '(') {  // if previous operator is '(' - add it anyway
-                        strcpy(stack[k++], &operator);
+                        strcpy(stack[k++], operator);
                         break;
                     }
                     else if (precedence(&inp[i]) >= precedence(stack[k - 1])) {
                         strcpy(polish[(*m)++], stack[--k]);
                     }
                 }
-                if (k == 0 && operator != ')') {  // no need to add ')' at stack
-                    strcpy(stack[k++], &operator);
+                if (k == 0 && operator[0] != ')') {  // no need to add ')' at stack
+                    strcpy(stack[k++], operator);
                 }
             }
         }
@@ -144,8 +145,8 @@ double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
