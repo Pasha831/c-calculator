@@ -79,8 +79,8 @@ double calculate(char polish[MAXSIZE][MAXSIZE], int n) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calc\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calc\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
