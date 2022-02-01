@@ -120,7 +120,7 @@ int main() {
                             break;
                         }
                         else if (operator == ')') {  // pop all operators from stack until '('
-                            while (strcmp(stack[--k], "(") != 0) {  // while we haven't found '('
+                            while (strcmp(stack[--k], "(") != 0 && k > 0) {  // while we haven't found '('
                                 strcpy(queue[m++], stack[k]);  // pop operator
                                 strcpy(stack[k], "\0");  // clean the position
                             }
