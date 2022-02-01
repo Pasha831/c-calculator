@@ -18,6 +18,19 @@ int inOperators(const char *inp) {
     }
 }
 
+void getNumber(char* inp, char polish[MAXSIZE][MAXSIZE], int *m, int *i){
+    int count = 0;
+    while ((inp[*i] >= '0' && inp[*i] <= '9') || inp[*i] == '.' || inp[*i] == ',') {  // is a part of a digit?
+        if (inp[*i] == ','){
+            inp[*i] = '.';
+        }
+        polish[*m][count++] = inp[(*i)++];
+    }
+    polish[*m][count] = 0;
+    (*m)++;
+    (*i)--;
+}
+
 // push number to queue, then clean the number string and set z (pointer) to 0
 void addNumber(char polish[MAXSIZE][MAXSIZE], char *n, int *z, int *m) {
     n[*z] = 0;
@@ -56,18 +69,15 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
 
     for (int i = 0; i < strlen(inp); i++) {
         if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == ',') {  // is a part of a digit?
-            if (inp[i] == ','){
-                inp[i] = '.';
-            }
-            n[z++] = inp[i];
+            getNumber(inp, polish, m, &i);
         }
         else if (inOperators(&inp[i])) {  // is an operator?
             char operator[MAXSIZE] = { 0 };
             operator[0] = inp[i];
 
-            if (z != 0) {  // if number is not empty
+            /*f (z != 0) {  // if number is not empty
                 addNumber(polish, n, &z, m);
-            }
+            }*/
 
             if (k == 0) {  // if stack is empty
                 strcpy(stack[k++], operator);
@@ -101,9 +111,9 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
         }
     }
 
-    if (z != 0) {  // push the remaining number, if there is one
+    /*if (z != 0) {  // push the remaining number, if there is one
         addNumber(polish, n, &z, m);
-    }
+    }*/
     while (k > 0) {  // push the remaining operations
         strcpy(polish[(*m)++], stack[--k]);
     }
