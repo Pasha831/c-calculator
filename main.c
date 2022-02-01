@@ -46,8 +46,70 @@ int precedence(const char* op) {
     }
 }
 
+// create RPN using input string
+void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
+    char stack[MAXSIZE][MAXSIZE] = { 0 };  // operation stack
+    int k = 0;  // pointer for stack
+
+    char n[MAXSIZE] = { 0 };  // to store long numbers from input
+    int z = 0;  // pointer for number
+
+    for (int i = 0; i < strlen(inp); i++) {
+        if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == ',') {  // is a part of a digit?
+            if (inp[i] == ','){
+                inp[i] = '.';
+            }
+            n[z++] = inp[i];
+        }
+        else if (inOperators(&inp[i])) {  // is an operator?
+            char operator = inp[i];
+
+            if (z != 0) {  // if number is not empty
+                addNumber(polish, n, &z, m);
+            }
+
+            if (k == 0) {  // if stack is empty
+                strcpy(stack[k++], &operator);
+            }
+            else {
+                while (k > 0) {  // if stack is not empty
+                    if (operator == '(') {  // simply add '(' to stack
+                        strcpy(stack[k++], &operator);
+                        break;
+                    }
+                    else if (operator == ')') {  // pop all operators from stack until '('
+                        while (strcmp(stack[--k], "(") != 0 && k > 0) {  // while we haven't found '('
+                            strcpy(polish[(*m)++], stack[k]);  // pop operator
+                            strcpy(stack[k], "\0");  // clean the position
+                        }
+                        strcpy(stack[k], "\0");  // when we reached '(': clean '('
+                        break;  // then break the search
+                    }
+                    else if (precedence(&inp[i]) < precedence(stack[k - 1]) || stack[k - 1][0] == '(') {  // if previous operator is '(' - add it anyway
+                        strcpy(stack[k++], &operator);
+                        break;
+                    }
+                    else if (precedence(&inp[i]) >= precedence(stack[k - 1])) {
+                        strcpy(polish[(*m)++], stack[--k]);
+                    }
+                }
+                if (k == 0 && operator != ')') {  // no need to add ')' at stack
+                    strcpy(stack[k++], &operator);
+                }
+            }
+        }
+    }
+
+    if (z != 0) {  // push the remaining number, if there is one
+        addNumber(polish, n, &z, m);
+    }
+    while (k > 0) {  // push the remaining operations
+        strcpy(polish[(*m)++], stack[--k]);
+    }
+}
+
 // function, that performs calculations from reversed polish notation
-double calculate(char polish[MAXSIZE][MAXSIZE], int n) {
+double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
 
     double* stack = (double*)calloc(n, sizeof(double));
     int count = 0;
@@ -87,70 +149,15 @@ int main() {
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
-    char stack[MAXSIZE][MAXSIZE] = { 0 };  // operation stack
-    char queue[MAXSIZE][MAXSIZE] = { 0 };  // reversed polish notation
-    int k = 0;  // pointer for stack
-    int m = 0;  // pointer for queue
-
-    char n[MAXSIZE] = { 0 };  // to store long numbers from input
-    int z = 0;  // pointer for number
-
     while (fgets(inp, MAXSIZE, fr)) {
-        for (int i = 0; i < strlen(inp); i++) {
-            if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == ',') {  // is a part of a digit?
-                if (inp[i] == ','){
-                    inp[i] = '.';
-                }
-                n[z++] = inp[i];
-            }
-            else if (inOperators(&inp[i])) {  // is an operator?
-                char operator = inp[i];
+        char polish[MAXSIZE][MAXSIZE] = { 0 };  // reversed polish notation
+        int m = 0;
 
-                if (z != 0) {  // if number is not empty
-                    addNumber(queue, n, &z, &m);
-                }
-
-                if (k == 0) {  // if stack is empty
-                    strcpy(stack[k++], &operator);
-                }
-                else {
-                    while (k > 0) {  // if stack is not empty
-                        if (operator == '(') {  // simply add '(' to stack
-                            strcpy(stack[k++], &operator);
-                            break;
-                        }
-                        else if (operator == ')') {  // pop all operators from stack until '('
-                            while (strcmp(stack[--k], "(") != 0 && k > 0) {  // while we haven't found '('
-                                strcpy(queue[m++], stack[k]);  // pop operator
-                                strcpy(stack[k], "\0");  // clean the position
-                            }
-                            strcpy(stack[k], "\0");  // when we reached '(': clean '('
-                            break;  // then break the search
-                        }
-                        else if (precedence(&inp[i]) < precedence(stack[k - 1]) || stack[k - 1][0] == '(') {  // if previous operator is '(' - add it anyway
-                            strcpy(stack[k++], &operator);
-                            break;
-                        }
-                        else if (precedence(&inp[i]) >= precedence(stack[k - 1])) {
-                            strcpy(queue[m++], stack[--k]);
-                        }
-                    }
-                    if (k == 0 && operator != ')') {  // no need to add ')' at stack
-                        strcpy(stack[k++], &operator);
-                    }
-                }
-            }
-        }
-
-        if (z != 0) {  // push the remaining number, if there is one
-            addNumber(queue, n, &z, &m);
-        }
-        while (k > 0) {  // push the remaining operations
-            strcpy(queue[m++], stack[--k]);
-        }
+        // create RPN from input string
+        createRPN(polish, &m, inp);
 
         // calculate RPN (reversed polish notation)
-        double res = calculate(queue, m);
+        double res = calculateRPN(polish, m);
 
         // print out the result in output.txt file
         fprintf(fw, "%lf\n", res);
