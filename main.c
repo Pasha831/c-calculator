@@ -19,9 +19,9 @@ int inOperators(const char *inp) {
 }
 
 // push number to queue, then clean the number string and set z (pointer) to 0
-void addNumber(char queue[MAXSIZE][MAXSIZE], char *n, int *z, int *m) {
+void addNumber(char polish[MAXSIZE][MAXSIZE], char *n, int *z, int *m) {
     n[*z] = 0;
-    strcpy(queue[(*m)++], n);
+    strcpy(polish[(*m)++], n);
     *z = 0;
 }
 
