@@ -2,27 +2,63 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#include "functions.h"
+
 #define MAXSIZE 100  // max size of input string
 
 FILE *fr;
 FILE *fw;
 
-// abs function for double (absolute value), (not working, because we don't work with unary minus)
-double absd(double x){
-    if (x < 0){
-        return -x;
+// returns an index of an operator from the list or -1 if operator is not in the list
+int inOperators(const char *inp) {
+    char *operators[] = {"+",
+                         "-",
+                         "*",
+                         "/",
+                         "^",
+                         "(",
+                         ")"};
+    for (int i = 0; i < 7; i++) {
+        if (*inp == *operators[i]) {
+            return i;
+        }
     }
-    return x;
+    return -1;
 }
 
-// is an operator?
-int inOperators(const char *inp) {
-    // we have to add other operators, like: '(', ')'
-    if (*inp == '+' || *inp == '-' || *inp == '*' || *inp == '/' || *inp == '^' || *inp == '(' || *inp == ')') {
+// returns an index of a function from the list or -1 if function is not in the list
+int inFunctions(char* str){
+    char* functions[] = { "cos",
+                          "sin",
+                          "tg",
+                          "log",
+                          "ln",
+                          "sqrt",
+                          "abs",
+                          "exp"};
+    //have to add "pow", "real", "imag", "mag", "phase"
+    for (int i = 0; i < 8; ++i){
+        if (!strcmp(functions[i], str)){
+            return i;
+        }
+    }
+    return -1;
+}
+
+// return the precedence (priority) of operator:
+int precedence(const char* op) {
+    if (*op == '(' || *op == ')') {
         return 1;
     }
-    else {
-        return 0;
+    else if (*op == '^') {
+        return 2;
+    }
+    else if (*op == '*' || *op == '/') {
+        return 3;
+    }
+    else if (*op == '+' || *op == '-') {
+        return 4;
     }
 }
 
@@ -48,46 +84,6 @@ void getSymbols(char* inp, char* str, int* i){
     }
     str[count] = 0;
     (*i)--;
-}
-
-// returns an index of a function from the list or -1 if function is not in the list
-int inFunctions(char* str){
-    char* functions[] = { "cos",
-                          "sin",
-                          "tg",
-                          "log",
-                          "ln",
-                          "sqrt",
-                          "abs",
-                          "exp"};
-    //have to add "pow", "real", "imag", "mag", "phase"
-    for (int i = 0; i < 8; ++i){
-        if (!strcmp(functions[i], str)){
-            return i;
-        }
-    }
-    return -1;
-}
-
-/* return the precedence (priority) of operator:
-    '(', ')' -> 1
-    '^' -> 2
-    '*', '/' -> 3
-    '+', '-' -> 4
-*/
-int precedence(const char* op) {
-    if (*op == '(' || *op == ')') {
-        return 1;
-    }
-    else if (*op == '^') {
-        return 2;
-    }
-    else if (*op == '*' || *op == '/') {
-        return 3;
-    }
-    else if (*op == '+' || *op == '-') {
-        return 4;
-    }
 }
 
 // create RPN using input string
@@ -153,9 +149,14 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
 
 // function, that performs calculations from reversed polish notation
 double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
-
     double* stack = (double*)calloc(n, sizeof(double));
     int count = 0;
+
+    double (*opers[])(double, double) = {add,
+                                         subtract,
+                                         multiply,
+                                         divide,
+                                         pow};
     double (*func[])(double) = {cos,
                                 sin,
                                 tan,
@@ -170,26 +171,12 @@ double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
             stack[count] = strtod(polish[i], 0);
             count++;
         }
-        else if (inOperators(&polish[i][0])){
-            if (polish[i][0] == '+') {
-                stack[count - 2] += stack[count - 1];
-            } else if (polish[i][0] == '-') {
-                stack[count - 2] -= stack[count - 1];
-            } else if (polish[i][0] == '*') {
-                stack[count - 2] *= stack[count - 1];
-            } else if (polish[i][0] == '/') {
-                stack[count - 2] /= stack[count - 1];
-            } else if (polish[i][0] == '^') {
-                stack[count - 2] = pow(stack[count - 2], stack[count - 1]);
-            }
-            stack[count - 1] = 0;
+        else if (inOperators(&polish[i][0]) != -1){
+            stack[count - 2] = opers[inOperators(&polish[i][0])](stack[count - 2], stack[count - 1]);
             count--;
         }
-        else {
-            int index = inFunctions(polish[i]);
-            if (index != -1) {
-                stack[count - 1] = func[index](stack[count - 1]);
-            }
+        else if (inFunctions(polish[i]) != -1){
+            stack[count - 1] = func[inFunctions(polish[i])](stack[count - 1]);
         }
     }
 
