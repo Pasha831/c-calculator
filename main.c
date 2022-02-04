@@ -4,26 +4,26 @@
 #include <math.h>
 #define MAXSIZE 100  // max size of input string
 
+#include "functions.h"
+
 FILE *fr;
 FILE *fw;
 
-// abs function for double (absolute value), (not working, because we don't work with unary minus)
-double absd(double x){
-    if (x < 0){
-        return -x;
-    }
-    return x;
-}
-
-// is an operator?
+// returns an index of an operator from the list or -1 if operator is not in the list
 int inOperators(const char *inp) {
-    // we have to add other operators, like: '(', ')'
-    if (*inp == '+' || *inp == '-' || *inp == '*' || *inp == '/' || *inp == '^' || *inp == '(' || *inp == ')') {
-        return 1;
+    char *operators[] = {"+",
+                         "-",
+                         "*",
+                         "/",
+                         "^",
+                         "(",
+                         ")"};
+    for (int i = 0; i < 7; i++) {
+        if (*inp == *operators[i]) {
+            return i;
+        }
     }
-    else {
-        return 0;
-    }
+    return -1;
 }
 
 // adding new number from input to RPL
@@ -43,7 +43,7 @@ void getNumber(char* inp, char polish[MAXSIZE][MAXSIZE], int *m, int *i){
 // adding symbols (of function or variable) from input to string
 void getSymbols(char* inp, char* str, int* i){
     int count = 0;
-    while (!inOperators(&inp[*i])){  // reading symbols from input until an operator is found
+    while (inOperators(&inp[*i]) == -1){  // reading symbols from input until an operator is found
         str[count++] = inp[(*i)++];
     }
     str[count] = 0;
@@ -69,24 +69,18 @@ int inFunctions(char* str){
     return -1;
 }
 
-/* return the precedence (priority) of operator:
-    '(', ')' -> 1
-    '^' -> 2
-    '*', '/' -> 3
-    '+', '-' -> 4
-*/
 int precedence(const char* op) {
-    if (*op == '(' || *op == ')') {
-        return 1;
-    }
-    else if (*op == '^') {
-        return 2;
-    }
-    else if (*op == '*' || *op == '/') {
-        return 3;
-    }
-    else if (*op == '+' || *op == '-') {
-        return 4;
+    switch (*op) {
+        case '(': case ')':
+            return 1;
+        case '^':
+            return 2;
+        case '*': case '/':
+            return 3;
+        case '+': case '-':
+            return 4;
+        default:
+            return -1;
     }
 }
 
@@ -99,7 +93,7 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
         if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == ',') {  // is a part of a digit?
             getNumber(inp, polish, m, &i);
         }
-        else if (inOperators(&inp[i])) {  // is an operator?
+        else if (inOperators(&inp[i]) != -1) {  // is an operator?
             char operator[MAXSIZE] = { 0 };
             operator[0] = inp[i];
 
@@ -137,7 +131,7 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
                 }
             }
         }
-        else{
+        else if (inp[i] != '\n') {
             char str[MAXSIZE] = { 0 };
             getSymbols(inp, str, &i);
             if (inFunctions(str) != -1){  // if str is a function
@@ -153,7 +147,6 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
 
 // function, that performs calculations from reversed polish notation
 double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
-
     double* stack = (double*)calloc(n, sizeof(double));
     int count = 0;
     double (*func[])(double) = {cos,
@@ -164,32 +157,25 @@ double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
                                 sqrt,
                                 absd,
                                 exp};
+    double (*opers[])(double, double) = {add,
+                                         subtract,
+                                         multiply,
+                                         divide,
+                                         pow};
 
     for (int i = 0; i < n; ++i){
         if (polish[i][0] >= '0' && polish[i][0] <= '9'){
             stack[count] = strtod(polish[i], 0);
             count++;
         }
-        else if (inOperators(&polish[i][0])){
-            if (polish[i][0] == '+') {
-                stack[count - 2] += stack[count - 1];
-            } else if (polish[i][0] == '-') {
-                stack[count - 2] -= stack[count - 1];
-            } else if (polish[i][0] == '*') {
-                stack[count - 2] *= stack[count - 1];
-            } else if (polish[i][0] == '/') {
-                stack[count - 2] /= stack[count - 1];
-            } else if (polish[i][0] == '^') {
-                stack[count - 2] = pow(stack[count - 2], stack[count - 1]);
-            }
-            stack[count - 1] = 0;
+        else if (inOperators(&polish[i][0]) != -1){
+            int index = inOperators(&polish[i][0]);
+            stack[count - 2] = opers[index](stack[count - 2], stack[count - 1]);
             count--;
         }
-        else {
+        else if (inFunctions(polish[i]) != -1){
             int index = inFunctions(polish[i]);
-            if (index != -1) {
-                stack[count - 1] = func[index](stack[count - 1]);
-            }
+            stack[count - 1] = func[index](stack[count - 1]);
         }
     }
 
@@ -201,8 +187,8 @@ double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE] = { 0 };  // each line of input
 
