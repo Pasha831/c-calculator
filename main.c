@@ -26,30 +26,6 @@ int inOperators(const char *inp) {
     return -1;
 }
 
-// adding new number from input to RPL
-void getNumber(char* inp, char polish[MAXSIZE][MAXSIZE], int *m, int *i){
-    int count = 0;
-    while ((inp[*i] >= '0' && inp[*i] <= '9') || inp[*i] == '.' || inp[*i] == ',') {  // is a part of a digit?
-        if (inp[*i] == ','){
-            inp[*i] = '.';
-        }
-        polish[*m][count++] = inp[(*i)++];
-    }
-    polish[*m][count] = 0;
-    (*m)++;
-    (*i)--;
-}
-
-// adding symbols (of function or variable) from input to string
-void getSymbols(char* inp, char* str, int* i){
-    int count = 0;
-    while (inOperators(&inp[*i]) == -1){  // reading symbols from input until an operator is found
-        str[count++] = inp[(*i)++];
-    }
-    str[count] = 0;
-    (*i)--;
-}
-
 // returns an index of a function from the list or -1 if function is not in the list
 int inFunctions(char* str){
     char* functions[] = { "cos",
@@ -82,6 +58,30 @@ int precedence(const char* op) {
         default:
             return -1;
     }
+}
+
+// adding new number from input to RPL
+void getNumber(char* inp, char polish[MAXSIZE][MAXSIZE], int *m, int *i){
+    int count = 0;
+    while ((inp[*i] >= '0' && inp[*i] <= '9') || inp[*i] == '.' || inp[*i] == ',') {  // is a part of a digit?
+        if (inp[*i] == ','){
+            inp[*i] = '.';
+        }
+        polish[*m][count++] = inp[(*i)++];
+    }
+    polish[*m][count] = 0;
+    (*m)++;
+    (*i)--;
+}
+
+// adding symbols (of function or variable) from input to string
+void getSymbols(char* inp, char* str, int* i){
+    int count = 0;
+    while (inOperators(&inp[*i]) == -1){  // reading symbols from input until an operator is found
+        str[count++] = inp[(*i)++];
+    }
+    str[count] = 0;
+    (*i)--;
 }
 
 // create RPN using input string
