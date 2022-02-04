@@ -3,4 +3,4 @@ project(c_calculator C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(c_calculator main.c)
+add_executable(c_calculator main.c functions.c functions.h)
