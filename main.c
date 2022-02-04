@@ -50,7 +50,7 @@ int precedence(const char* op) {
     switch (*op) {
         case '(': case ')':
             return 1;
-            case '^': case ',':
+        case '^': case ',':
             return 2;
         case '*': case '/':
             return 3;
