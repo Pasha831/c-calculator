@@ -163,7 +163,7 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
 }
 
 // function, that performs calculations from reversed polish notation
-double _Complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
+double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
     double complex* stack = (double complex*)calloc(n, sizeof(double complex));
     int count = 0;
     double complex (*func[])(double complex) = {ccos,
@@ -205,7 +205,7 @@ double _Complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
         }
     }
 
-    double _Complex res = stack[0];
+    double complex res = stack[0];
     free(stack);
     return res;
 }
@@ -229,7 +229,7 @@ int main() {
         createRPN(polish, &m, inp);
 
         // calculate RPN (reversed polish notation)
-        double _Complex res = calculateRPN(polish, m);
+        double complex res = calculateRPN(polish, m);
 
         // print out the result in output.txt file
         fprintf(fw, "Answer: %.3f + %.3fj\n", creal(res), cimag(res));
