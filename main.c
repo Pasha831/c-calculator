@@ -50,11 +50,11 @@ int precedence(const char* op) {
     switch (*op) {
         case '(': case ')':
             return 1;
-        case '^': case ',':
+        case '^':
             return 2;
         case '*': case '/':
             return 3;
-        case '+': case '-':
+        case '+': case '-': case ',':
             return 4;
         default:
             return -1;
@@ -213,8 +213,8 @@ double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
 
