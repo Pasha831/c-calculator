@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <tgmath.h>
 #define MAXSIZE 100  // max size of input string
 
 #include "functions.h"
@@ -64,15 +64,20 @@ int precedence(const char* op) {
 // adding new number from input to RPL
 void getNumber(char* inp, char polish[MAXSIZE][MAXSIZE], int *m, int *i){
     int count = 0;
-    while ((inp[*i] >= '0' && inp[*i] <= '9') || inp[*i] == '.') {  // is a part of a digit?
-        if (inp[*i] == ','){
-            inp[*i] = '.';
+    char imag = 0;
+    while ((inp[*i] >= '0' && inp[*i] <= '9') || inp[*i] == '.' || inp[*i] == 'j') {  // is a part of a digit?
+        if (inp[*i] == 'j'){  // is imaginary?
+            imag = 'j';
+            (*i)++;
         }
-        polish[*m][count++] = inp[(*i)++];
+        else {
+            polish[*m][count++] = inp[(*i)++];
+        }
     }
-    polish[*m][count] = 0;
-    (*m)++;
-    (*i)--;
+    polish[*m][count++] = imag;  // adding 'j' to the end of the processed number
+    polish[*m][count] = 0;  // end of string
+    (*m)++;  // incrementing number of elements of RPN
+    (*i)--;  // step back in input
 }
 
 // adding symbols (of function or variable) from input to string
@@ -81,8 +86,8 @@ void getSymbols(char* inp, char* str, int* i){
     while (inOperators(&inp[*i]) == -1){  // reading symbols from input until an operator is found
         str[count++] = inp[(*i)++];
     }
-    str[count] = 0;
-    (*i)--;
+    str[count] = 0; // end of string
+    (*i)--;  // step back in input
 }
 
 // clean input string from spaces and '\n'
@@ -102,7 +107,7 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
     int k = 0;  // pointer for stack
 
     for (int i = 0; i < strlen(inp); i++) {
-        if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.') {  // is a part of a digit?
+        if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == 'j') {  // is a part of a digit?
             getNumber(inp, polish, m, &i);
         }
         else if (inOperators(&inp[i]) != -1) {  // is an operator?
@@ -158,28 +163,36 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
 }
 
 // function, that performs calculations from reversed polish notation
-double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
-    double* stack = (double*)calloc(n, sizeof(double));
+double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
+    double complex* stack = (double complex*)calloc(n, sizeof(double complex));
     int count = 0;
-    double (*func[])(double) = {cos,
-                                sin,
-                                tan,
-                                log10,
-                                log,
-                                sqrt,
-                                absd,
-                                exp};
-    double (*opers[])(double, double) = {add,
-                                         subtract,
-                                         multiply,
-                                         divide,
-                                         pow,
-                                         pow};
+    double complex (*func[])(double complex) = {ccos,
+                                                csin,
+                                                ctan,
+                                                clog10,
+                                                clog,
+                                                csqrt,
+                                                cabsd,
+                                                cexp};
+    double complex (*opers[])(double complex, double complex) = {add,
+                                                                 subtract,
+                                                                 multiply,
+                                                                 divide,
+                                                                 cpow,
+                                                                 cpow};
 
     for (int i = 0; i < n; ++i){
-        if (polish[i][0] >= '0' && polish[i][0] <= '9'){
-            stack[count] = strtod(polish[i], 0);
-            count++;
+        if ((polish[i][0] >= '0' && polish[i][0] <= '9') || polish[i][0] == 'j'){
+            if (polish[i][strlen(polish[i])-1] == 'j'){ // if number is imaginary
+                stack[count] = strtod(polish[i], 0) * I;
+                if (polish[i][0] == 'j'){ // if string consists only of one 'j'
+                    stack[count] = I;
+                }
+                count++;
+            }
+            else {
+                stack[count++] = strtod(polish[i], 0);
+            }
         }
         else if (inOperators(&polish[i][0]) != -1){
             int index = inOperators(&polish[i][0]);
@@ -192,7 +205,7 @@ double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
         }
     }
 
-    double res = stack[0];
+    double complex res = stack[0];
     free(stack);
     return res;
 }
@@ -200,8 +213,8 @@ double calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
 
@@ -216,9 +229,9 @@ int main() {
         createRPN(polish, &m, inp);
 
         // calculate RPN (reversed polish notation)
-        double res = calculateRPN(polish, m);
+        double complex res = calculateRPN(polish, m);
 
         // print out the result in output.txt file
-        fprintf(fw, "%lf\n", res);
+        fprintf(fw, "Answer: %.3f + %.3fj\n", creal(res), cimag(res));
     }
 }
