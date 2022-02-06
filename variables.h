@@ -13,10 +13,11 @@ typedef struct Var {
     int isInit;
 
     char polish[MAXSIZE][MAXSIZE];  // RPN
-    int m;  // pointer fo RPN
+    int countPolish;  // pointer for RPN
 
     int unknown;  // number of linked variables, that are still undefined
-    Var *linked;  // fuck it!!!, can't create Var linked[MAX_VARS]
+    Var *linked[MAX_VARS];
+    int countLinked;
 } Var;
 
 typedef struct Data {
