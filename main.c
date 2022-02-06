@@ -264,6 +264,7 @@ int main() {
             createRPN(data.variables[pos].polish, &data.variables[pos].m, inp);  // create RPN for the variable
         }
 
+
         // calculate RPN (reversed polish notation)
         double complex res = calculateRPN(polish, m);
 
