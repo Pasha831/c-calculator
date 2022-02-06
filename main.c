@@ -188,8 +188,8 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
 }
 
 // function, that performs calculations from reversed polish notation
-double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
-    double complex* stack = (double complex*)calloc(n, sizeof(double complex));
+void calculateRPN(Var* currentVar) {
+    double complex* stack = (double complex*)calloc(currentVar->countPolish, sizeof(double complex));
     int count = 0;
     double complex (*func[])(double complex) = {ccos,
                                                 csin,
@@ -210,33 +210,36 @@ double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
                                                                  cpow,
                                                                  cpow};
 
-    for (int i = 0; i < n; ++i){
-        if ((polish[i][0] >= '0' && polish[i][0] <= '9') || polish[i][0] == 'j'){
-            if (polish[i][strlen(polish[i])-1] == 'j'){ // if number is imaginary
-                stack[count] = strtod(polish[i], 0) * I;
-                if (polish[i][0] == 'j'){ // if string consists only of one 'j'
+    for (int i = 0; i < currentVar->countPolish; ++i){
+        if ((currentVar->polish[i][0] >= '0' && currentVar->polish[i][0] <= '9') || currentVar->polish[i][0] == 'j'){
+            if (currentVar->polish[i][strlen(currentVar->polish[i])-1] == 'j'){ // if number is imaginary
+                stack[count] = strtod(currentVar->polish[i], 0) * I;
+                if (currentVar->polish[i][0] == 'j'){ // if string consists only of one 'j'
                     stack[count] = I;
                 }
                 count++;
             }
             else {
-                stack[count++] = strtod(polish[i], 0);
+                stack[count++] = strtod(currentVar->polish[i], 0);
             }
         }
-        else if (inOperators(&polish[i][0]) != -1){
-            int index = inOperators(&polish[i][0]);
+        else if (inOperators(&currentVar->polish[i][0]) != -1){
+            int index = inOperators(&currentVar->polish[i][0]);
             stack[count - 2] = opers[index](stack[count - 2], stack[count - 1]);
             count--;
         }
-        else if (inFunctions(polish[i]) != -1){
-            int index = inFunctions(polish[i]);
+        else if (inFunctions(currentVar->polish[i]) != -1){
+            int index = inFunctions(currentVar->polish[i]);
             stack[count - 1] = func[index](stack[count - 1]);
+        }
+        else{
+            // adding variable value to stack
+            stack[count++] = data.variables[inData(currentVar->polish[i], &data)].value;
         }
     }
 
-    double complex res = stack[0];
+    currentVar->value = stack[0];
     free(stack);
-    return res;
 }
 
 
@@ -273,11 +276,16 @@ int main() {
             createRPN(&data.variables[pos], inp);  // create RPN for the variable
         }
 
+        // calculate RPN for every variable (from the bottom to the top)
+        for (int i = data.count - 1; i >= 0; --i) {
+            calculateRPN(&data.variables[i]);
+            fprintf(fw, "%s = %.3f + %.3fj\n", data.variables[i].name, creal(data.variables[i].value), cimag(data.variables[i].value));
+        }
 
         // calculate RPN (reversed polish notation)
-        double complex res = calculateRPN(mainExp.polish, mainExp.countPolish);
+        calculateRPN(&mainExp);
 
         // print out the result in output.txt file
-        fprintf(fw, "Answer: %.3f + %.3fj\n", creal(res), cimag(res));
+        fprintf(fw, "Answer: %.3f + %.3fj\n", creal(mainExp.value), cimag(mainExp.value));
     }
 }
