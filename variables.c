@@ -1,6 +1,5 @@
 #include "variables.h"
 #include <stdlib.h>
-#include <tgmath.h>
 #include <string.h>
 #define MAXSIZE 100
 #define MAX_VARS 10

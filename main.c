@@ -40,9 +40,13 @@ int inFunctions(char* str){
                           "ln",
                           "sqrt",
                           "abs",
-                          "exp"};
+                          "exp",
+                          "real",
+                          "imag",
+                          "mag",
+                          "phase"};
     //have to add "real", "imag", "mag", "phase"
-    for (int i = 0; i < 8; ++i){
+    for (int i = 0; i < 12; ++i){
         if (!strcmp(functions[i], str)){
             return i;
         }
@@ -193,7 +197,11 @@ double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
                                                 clog,
                                                 csqrt,
                                                 cabsd,
-                                                cexp};
+                                                cexp,
+                                                real,
+                                                imag,
+                                                cabsd,
+                                                phase};
     double complex (*opers[])(double complex, double complex) = {add,
                                                                  subtract,
                                                                  multiply,
@@ -233,8 +241,8 @@ double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     initData(&data);
 
