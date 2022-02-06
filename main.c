@@ -94,15 +94,6 @@ void getSymbols(char* inp, char* str, int* i){
     (*i)--;  // step back in input
 }
 
-int isVariable(char* inp) {
-    for (int i = 0; i < strlen(inp); i++) {
-        if (inp[i] == '=') {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 // clean input string from spaces and '\n'
 void cleanInput(char* inp){
     int count = 0;
