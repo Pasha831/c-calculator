@@ -5,9 +5,12 @@
 #define MAXSIZE 100  // max size of input string
 
 #include "functions.h"
+#include "variables.h"
 
 FILE *fr;
 FILE *fw;
+
+Data data;  // made ot global, in order to have access to it everywhere in program
 
 // returns an index of an operator from the list or -1 if operator is not in the list
 int inOperators(const char *inp) {
@@ -18,8 +21,9 @@ int inOperators(const char *inp) {
                          "^",
                          ",",  // ^ operator for pow(..., ...)
                          "(",
-                         ")"};
-    for (int i = 0; i < 8; i++) {
+                         ")",
+                         "="};
+    for (int i = 0; i < 9; i++) {
         if (*inp == *operators[i]) {
             return i;
         }
@@ -90,6 +94,15 @@ void getSymbols(char* inp, char* str, int* i){
     (*i)--;  // step back in input
 }
 
+int isVariable(char* inp) {
+    for (int i = 0; i < strlen(inp); i++) {
+        if (inp[i] == '=') {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 // clean input string from spaces and '\n'
 void cleanInput(char* inp){
     int count = 0;
@@ -99,6 +112,16 @@ void cleanInput(char* inp){
         }
     }
     inp[count] = 0;
+}
+
+// deletes variable name and "=" sign from input string to create an expression
+void toExpression(char *inp, int *start) {
+    int count = 0;
+    *start += 2;  // getSymbols points start to the end of the variable name, so we need to jump further for 2 positions
+    for (int i = *start; i < strlen(inp); i++) {
+        inp[count++] = inp[i];
+    }
+    inp[count++] = '\0';
 }
 
 // create RPN using input string
@@ -153,6 +176,12 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
 
             if (inFunctions(str) != -1){  // if str is a function
                 strcpy(stack[k++], str);  // adding to operation stack
+            }
+            else if (strcmp(str, "pow") != 0) {  // if it's not a function or pow function, that we skip
+                if (inData(str, &data) == -1) {  // if there is no such variable in Data
+                    addVar(str, &data);  // create it and increment count in Data
+                }
+                strcpy(polish[(*m)++], str);  // add it anyway to the RPN
             }
         }
     }
@@ -216,6 +245,8 @@ int main() {
     fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
     fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
+    initData(&data);
+
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
 
     while (fgets(inp, MAXSIZE*MAXSIZE, fr)) {
@@ -225,8 +256,22 @@ int main() {
         // clean input from spaces and '\n'
         cleanInput(inp);
 
-        // create RPN from input string
+        // create RPN from input string - the main expression of input!
         createRPN(polish, &m, inp);
+
+        // process "count" numbers, if count = 0 -> it won't launch and everything will be ok!
+        for (int i = 0; i < data.count; i++) {
+            fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
+            cleanInput(inp);  // clean it
+
+            char varName[MAXSIZE] = { 0 };  // variable's name
+            int start = 0;  // pointer for changing input to expression
+            getSymbols(inp, varName, &start);  // get the name of the variable
+            toExpression(inp, &start);
+
+            int pos = inData(varName, &data);  // search the position of variable in Data
+            createRPN(data.variables[pos].polish, &data.variables[pos].m, inp);  // create RPN for the variable
+        }
 
         // calculate RPN (reversed polish notation)
         double complex res = calculateRPN(polish, m);
