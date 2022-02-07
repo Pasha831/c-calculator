@@ -1,7 +1,5 @@
 #include "variables.h"
 #include <string.h>
-#define MAXSIZE 100
-#define MAX_VARS 10
 
 void initData(Data *data) {
     data->count = 0;
@@ -20,10 +18,6 @@ void initVar(Var *var) {
 
     // initialize empty RPN
     var->countPolish = 0;
-    for (int i = 0; i < MAXSIZE; i++) {
-        var->polish[i][0] = '\0';
-    }
-
     var->countLocal = 0;
     var->unknown = 0;
     var->countLinked = 0;

@@ -2,7 +2,7 @@
 #define C_CALCULATOR_VARIABLES_H
 #include <tgmath.h>
 #define MAXSIZE 100
-#define MAX_VARS 10
+#define MAX_VARS 100
 
 typedef struct Var Var;
 typedef struct Data Data;
