@@ -10,12 +10,14 @@ typedef struct Data Data;
 typedef struct Var {
     char name[MAXSIZE];
     double complex value;
-    int isInit;
+    int isDefined;
 
     char polish[MAXSIZE][MAXSIZE];  // RPN
     int countPolish;  // pointer for RPN
 
     int unknown;  // number of linked variables, that are still undefined
+    Var *localVars[MAX_VARS];
+    int countLocal;
     Var *linked[MAX_VARS];
     int countLinked;
 } Var;
@@ -29,5 +31,7 @@ void initData(Data *data);
 void initVar(Var *var);
 int inData(char *varName, Data *data);
 void addVar(char *varName, Data *data);
+int inLocalVars(Var *mainVar, Var *desiredVar);
+void defineVar(Var* var);
 
 #endif

@@ -176,7 +176,11 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
                 if (index == data.count) {  // if there is no such variable in Data
                     addVar(str, &data);  // create it and increment count in Data
                 }
-                currentVar->linked[currentVar->countLinked ++] = &data.variables[index];
+                if (inLocalVars(currentVar, &data.variables[index]) == -1) {
+                    currentVar->unknown++;
+                    currentVar->localVars[currentVar->countLocal++] = &data.variables[index];
+                    data.variables[index].linked[data.variables[index].countLinked++] = currentVar;
+                }
                 strcpy(currentVar->polish[currentVar->countPolish++], str);  // add it anyway to the RPN
             }
         }
@@ -263,7 +267,7 @@ int main() {
         createRPN(&mainExp, inp);
 
         // process "count" numbers, if count = 0 -> it won't launch and everything will be ok!
-        for (int i = 0; i < data.count; i++) {
+        for (int i = 0; i < data.count - 2; i++) {
             fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
             cleanInput(inp);  // clean it
 
@@ -273,19 +277,36 @@ int main() {
             toExpression(inp, &start);
 
             int pos = inData(varName, &data);  // search the position of variable in Data
+            if (pos == data.count && inp[0] != 0){
+                addVar(varName, &data);
+            }
             createRPN(&data.variables[pos], inp);  // create RPN for the variable
+            inp[0] = 0;
         }
 
+        defineVar(&data.variables[0]);
+        defineVar(&data.variables[1]);
         // calculate RPN for every variable (from the bottom to the top)
-        for (int i = data.count - 1; i >= 0; --i) {
-            calculateRPN(&data.variables[i]);
-            fprintf(fw, "%s = %.3f + %.3fj\n", data.variables[i].name, creal(data.variables[i].value), cimag(data.variables[i].value));
+        for (int i = 0; i < data.count; ++i) {
+            int flag = 0;
+            for (int j = 0; j < data.count; ++j) {
+                if (data.variables[j].unknown == 0 && data.variables[j].isDefined == 0) {
+                    flag++;
+                    calculateRPN(&data.variables[j]);
+                    defineVar(&data.variables[j]);
+                    fprintf(fw, "%s = %.8f + %.8fj\n", data.variables[j].name, creal(data.variables[j].value),
+                            cimag(data.variables[j].value));
+                }
+            }
+            if (flag == 0){
+                break;
+            }
         }
 
         // calculate RPN (reversed polish notation)
         calculateRPN(&mainExp);
 
         // print out the result in output.txt file
-        fprintf(fw, "Answer: %.3f + %.3fj\n", creal(mainExp.value), cimag(mainExp.value));
+        fprintf(fw, "Answer: %.8f + %.8fj\n", creal(mainExp.value), cimag(mainExp.value));
     }
 }
