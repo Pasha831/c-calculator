@@ -104,22 +104,17 @@ void cleanInput(char* inp){
     int count = 0;
 
     for (int i = 0; inp[i] != '\0' && inp[i] != '\n'; ++i){
-        if (inp[i] == ' ') {
-            continue;
-        }
-        else if (inp[i] == ',') {
+        if (inp[i] == ',') {
             cleanedInput[count++] = ')';
             cleanedInput[count++] = '^';
             cleanedInput[count++] = '(';
         }
-        else {
+        else if (inp[i] != ' ') {
             cleanedInput[count++] = inp[i];
         }
     }
 
-    for (int i = 0; i < strlen(cleanedInput) + 1; i++) {  // strlen() + 1 - because we want to add '\0' right in for loop :)
-        inp[i] = cleanedInput[i];
-    }
+    strcpy(inp, cleanedInput);
 }
 
 // deletes variable name and "=" sign from input string to create an expression
