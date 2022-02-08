@@ -16,11 +16,11 @@ void initVar(Var *var) {
     var->value = 0;
     var->isDefined = 0;
 
-    // initialize empty RPN
     var->countPolish = 0;
-    var->countLocal = 0;
-    var->unknown = 0;
-    var->countLinked = 0;
+    var->countChildren = 0;
+    var->countFathers = 0;
+
+    var->countUnknown = 0;
 }
 
 int inData(char *varName, Data *data) {
@@ -38,8 +38,8 @@ void addVar(char *varName, Data *data) {
 }
 
 int inLocalVars(Var *mainVar, Var *desiredVar) {
-    for (int i = 0; i < mainVar->countLocal; ++i){
-        if (mainVar->localVars[i] == desiredVar){
+    for (int i = 0; i < mainVar->countChildren; ++i){
+        if (mainVar->childrenVars[i] == desiredVar){
             return i;
         }
     }
@@ -48,7 +48,7 @@ int inLocalVars(Var *mainVar, Var *desiredVar) {
 
 void defineVar(Var* var) {
     var->isDefined = 1;
-    for (int i = 0; i < var->countLinked; ++i){
-        var->linked[i]->unknown--;
+    for (int i = 0; i < var->countFathers; ++i){
+        var->fathers[i]->countUnknown--;
     }
 }

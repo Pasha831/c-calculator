@@ -100,13 +100,26 @@ void getSymbols(char* inp, char* str, int* i){
 
 // clean input string from spaces and '\n'
 void cleanInput(char* inp){
+    char cleanedInput[MAXSIZE*MAXSIZE] = { 0 };
     int count = 0;
+
     for (int i = 0; inp[i] != '\0' && inp[i] != '\n'; ++i){
-        if (inp[i] != ' '){
-            inp[count++] = inp[i];
+        if (inp[i] == ' ') {
+            continue;
+        }
+        else if (inp[i] == ',') {
+            cleanedInput[count++] = ')';
+            cleanedInput[count++] = '^';
+            cleanedInput[count++] = '(';
+        }
+        else {
+            cleanedInput[count++] = inp[i];
         }
     }
-    inp[count] = 0;
+
+    for (int i = 0; i < strlen(cleanedInput) + 1; i++) {  // strlen() + 1 - because we want to add '\0' right in for loop :)
+        inp[i] = cleanedInput[i];
+    }
 }
 
 // deletes variable name and "=" sign from input string to create an expression
@@ -177,9 +190,9 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
                     addVar(str, &data);  // create it and increment count in Data
                 }
                 if (inLocalVars(currentVar, &data.variables[index]) == -1) {
-                    currentVar->unknown++;
-                    currentVar->localVars[currentVar->countLocal++] = &data.variables[index];
-                    data.variables[index].linked[data.variables[index].countLinked++] = currentVar;
+                    currentVar->countUnknown++;
+                    currentVar->childrenVars[currentVar->countChildren++] = &data.variables[index];
+                    data.variables[index].fathers[data.variables[index].countFathers++] = currentVar;
                 }
                 strcpy(currentVar->polish[currentVar->countPolish++], str);  // add it anyway to the RPN
             }
@@ -246,11 +259,31 @@ void calculateRPN(Var* currentVar) {
     free(stack);
 }
 
+void printAnswer(Var *var) {
+    if (creal(var->value) != 0 && cimag(var->value) != 0) {
+        if (cimag(var->value) > 0) {
+            fprintf(fw, "%s = %.3f + %.3fj\n", var->name, creal(var->value), cimag(var->value));
+        }
+        else {
+            fprintf(fw, "%s = %.3f - %.3fj\n", var->name, creal(var->value), -1 * cimag(var->value));
+        }
+    }
+    else if (creal(var->value) != 0) {
+        fprintf(fw, "%s = %.3f\n", var->name, creal(var->value));
+    }
+    else if (cimag(var->value) != 0) {
+        fprintf(fw, "%s = %.3fj\n", var->name, cimag(var->value));
+    }
+    else {
+        fprintf(fw, "%s = %.3f\n", var->name, creal(var->value));
+    }
+}
+
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     initData(&data);
 
@@ -259,6 +292,7 @@ int main() {
     while (fgets(inp, MAXSIZE*MAXSIZE, fr)) {
         Var mainExp;  // main expression
         initVar(&mainExp);
+        strcpy(mainExp.name, "Answer");  // set mainExp name as an Answer
 
         // clean input from spaces and '\n'
         cleanInput(inp);
@@ -267,8 +301,8 @@ int main() {
         createRPN(&mainExp, inp);
 
         // process "count" numbers, if count = 0 -> it won't launch and everything will be ok!
-        for (int i = 0; i < data.count - 2; i++) {
-            fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
+        fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
+        for (int i = 0; i < data.count - 2 && inp[0] != '\0'; i++) {
             cleanInput(inp);  // clean it
 
             char varName[MAXSIZE] = { 0 };  // variable's name
@@ -281,7 +315,8 @@ int main() {
                 addVar(varName, &data);
             }
             createRPN(&data.variables[pos], inp);  // create RPN for the variable
-            inp[0] = 0;
+
+            fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
         }
 
         defineVar(&data.variables[0]);
@@ -290,12 +325,11 @@ int main() {
         for (int i = 0; i < data.count; ++i) {
             int flag = 0;
             for (int j = 0; j < data.count; ++j) {
-                if (data.variables[j].unknown == 0 && data.variables[j].isDefined == 0) {
+                if (data.variables[j].countUnknown == 0 && data.variables[j].isDefined == 0) {
                     flag++;
                     calculateRPN(&data.variables[j]);
                     defineVar(&data.variables[j]);
-                    fprintf(fw, "%s = %.8f + %.8fj\n", data.variables[j].name, creal(data.variables[j].value),
-                            cimag(data.variables[j].value));
+                    printAnswer(&data.variables[j]);
                 }
             }
             if (flag == 0){
@@ -307,6 +341,6 @@ int main() {
         calculateRPN(&mainExp);
 
         // print out the result in output.txt file
-        fprintf(fw, "Answer: %.8f + %.8fj\n", creal(mainExp.value), cimag(mainExp.value));
+        printAnswer(&mainExp);
     }
 }

@@ -15,11 +15,11 @@ typedef struct Var {
     char polish[MAXSIZE][MAXSIZE];  // RPN
     int countPolish;  // pointer for RPN
 
-    int unknown;  // number of linked variables, that are still undefined
-    Var *localVars[MAX_VARS];
-    int countLocal;
-    Var *linked[MAX_VARS];
-    int countLinked;
+    int countUnknown;  // number of linked variables, that are still undefined
+    Var *childrenVars[MAX_VARS];
+    int countChildren;
+    Var *fathers[MAX_VARS];
+    int countFathers;
 } Var;
 
 typedef struct Data {
