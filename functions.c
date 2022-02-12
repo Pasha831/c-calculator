@@ -22,3 +22,13 @@ double complex cabsd(double complex x) {
 double complex clog10(double complex x) {
     return clog(x)/clog(10);
 }
+
+double complex real(double complex x) {
+    return creal(x);
+}
+double complex imag(double complex x) {
+    return cimag(x);
+}
+double complex phase(double complex x) {
+    return carg(x);
+}

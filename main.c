@@ -5,9 +5,12 @@
 #define MAXSIZE 100  // max size of input string
 
 #include "functions.h"
+#include "variables.h"
 
 FILE *fr;
 FILE *fw;
+
+Data data;  // made ot global, in order to have access to it everywhere in program
 
 // returns an index of an operator from the list or -1 if operator is not in the list
 int inOperators(const char *inp) {
@@ -18,8 +21,9 @@ int inOperators(const char *inp) {
                          "^",
                          ",",  // ^ operator for pow(..., ...)
                          "(",
-                         ")"};
-    for (int i = 0; i < 8; i++) {
+                         ")",
+                         "="};
+    for (int i = 0; i < 9; i++) {
         if (*inp == *operators[i]) {
             return i;
         }
@@ -36,9 +40,13 @@ int inFunctions(char* str){
                           "ln",
                           "sqrt",
                           "abs",
-                          "exp"};
+                          "exp",
+                          "real",
+                          "imag",
+                          "mag",
+                          "phase"};
     //have to add "real", "imag", "mag", "phase"
-    for (int i = 0; i < 8; ++i){
+    for (int i = 0; i < 12; ++i){
         if (!strcmp(functions[i], str)){
             return i;
         }
@@ -83,7 +91,7 @@ void getNumber(char* inp, char polish[MAXSIZE][MAXSIZE], int *m, int *i){
 // adding symbols (of function or variable) from input to string
 void getSymbols(char* inp, char* str, int* i){
     int count = 0;
-    while (inOperators(&inp[*i]) == -1){  // reading symbols from input until an operator is found
+    while (inp[*i] && inOperators(&inp[*i]) == -1){  // reading symbols from input until an operator is found
         str[count++] = inp[(*i)++];
     }
     str[count] = 0; // end of string
@@ -92,23 +100,41 @@ void getSymbols(char* inp, char* str, int* i){
 
 // clean input string from spaces and '\n'
 void cleanInput(char* inp){
+    char cleanedInput[MAXSIZE*MAXSIZE] = { 0 };
     int count = 0;
+
     for (int i = 0; inp[i] != '\0' && inp[i] != '\n'; ++i){
-        if (inp[i] != ' '){
-            inp[count++] = inp[i];
+        if (inp[i] == ',') {
+            cleanedInput[count++] = ')';
+            cleanedInput[count++] = '^';
+            cleanedInput[count++] = '(';
+        }
+        else if (inp[i] != ' ') {
+            cleanedInput[count++] = inp[i];
         }
     }
-    inp[count] = 0;
+
+    strcpy(inp, cleanedInput);
+}
+
+// deletes variable name and "=" sign from input string to create an expression
+void toExpression(char *inp, int *start) {
+    int count = 0;
+    *start += 2;  // getSymbols points start to the end of the variable name, so we need to jump further for 2 positions
+    for (int i = *start; i < strlen(inp); i++) {
+        inp[count++] = inp[i];
+    }
+    inp[count] = '\0';
 }
 
 // create RPN using input string
-void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
+void createRPN(Var* currentVar, char inp[MAXSIZE]) {
     char stack[MAXSIZE][MAXSIZE] = { 0 };  // operation stack
     int k = 0;  // pointer for stack
 
     for (int i = 0; i < strlen(inp); i++) {
         if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == 'j') {  // is a part of a digit?
-            getNumber(inp, polish, m, &i);
+            getNumber(inp, currentVar->polish, &currentVar->countPolish, &i);
         }
         else if (inOperators(&inp[i]) != -1) {  // is an operator?
             char operator[MAXSIZE] = { 0 };
@@ -116,7 +142,7 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
 
             // possible solution for unary minus (does not work with some binary functions)
             if (operator[0] == '-' && (inp[i-1] == '(' || i == 0)){
-                strcpy(polish[(*m)++], "0");
+                strcpy(currentVar->polish[currentVar->countPolish++], "0");
             }
 
             while (k > 0) {  // if stack is not empty
@@ -126,12 +152,12 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
                 }
                 else if (operator[0] == ')') {  // pop all operators from stack until '('
                     while (strcmp(stack[--k], "(") != 0 && k > 0) {  // while we haven't found '('
-                        strcpy(polish[(*m)++], stack[k]);  // pop operator
+                        strcpy(currentVar->polish[currentVar->countPolish++], stack[k]);  // pop operator
                         strcpy(stack[k], "\0");  // clean the position
                     }
                     strcpy(stack[k], "\0");// when we reached '(': clean '('
                     if (inFunctions(stack[k-1]) != -1){  // if there is a function before '('
-                        strcpy(polish[(*m)++], stack[--k]);  // pop function
+                        strcpy(currentVar->polish[currentVar->countPolish++], stack[--k]);  // pop function
                     }
                     break;  // then break the search
                 }
@@ -140,7 +166,7 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
                     break;
                 }
                 else if (precedence(&inp[i]) >= precedence(stack[k - 1])) {
-                    strcpy(polish[(*m)++], stack[--k]);
+                    strcpy(currentVar->polish[currentVar->countPolish++], stack[--k]);
                 }
             }
             if (k == 0 && operator[0] != ')') {  // no need to add ')' at stack
@@ -150,21 +176,32 @@ void createRPN(char polish[MAXSIZE][MAXSIZE], int *m, char inp[MAXSIZE]) {
         else {
             char str[MAXSIZE] = { 0 };
             getSymbols(inp, str, &i);
-
             if (inFunctions(str) != -1){  // if str is a function
                 strcpy(stack[k++], str);  // adding to operation stack
+            }
+            else if (strcmp(str, "pow") != 0) {  // if it's not a function or pow function, that we skip
+                int index = inData(str, &data);
+                if (index == data.count) {  // if there is no such variable in Data
+                    addVar(str, &data);  // create it and increment count in Data
+                }
+                if (inLocalVars(currentVar, &data.variables[index]) == -1) {
+                    currentVar->countUnknown++;
+                    currentVar->childrenVars[currentVar->countChildren++] = &data.variables[index];
+                    data.variables[index].fathers[data.variables[index].countFathers++] = currentVar;
+                }
+                strcpy(currentVar->polish[currentVar->countPolish++], str);  // add it anyway to the RPN
             }
         }
     }
 
     while (k > 0) {  // push the remaining operations
-        strcpy(polish[(*m)++], stack[--k]);
+        strcpy(currentVar->polish[currentVar->countPolish++], stack[--k]);
     }
 }
 
 // function, that performs calculations from reversed polish notation
-double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
-    double complex* stack = (double complex*)calloc(n, sizeof(double complex));
+void calculateRPN(Var* currentVar) {
+    double complex* stack = (double complex*)calloc(currentVar->countPolish, sizeof(double complex));
     int count = 0;
     double complex (*func[])(double complex) = {ccos,
                                                 csin,
@@ -173,7 +210,11 @@ double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
                                                 clog,
                                                 csqrt,
                                                 cabsd,
-                                                cexp};
+                                                cexp,
+                                                real,
+                                                imag,
+                                                cabsd,
+                                                phase};
     double complex (*opers[])(double complex, double complex) = {add,
                                                                  subtract,
                                                                  multiply,
@@ -181,33 +222,56 @@ double complex calculateRPN(char polish[MAXSIZE][MAXSIZE], int n) {
                                                                  cpow,
                                                                  cpow};
 
-    for (int i = 0; i < n; ++i){
-        if ((polish[i][0] >= '0' && polish[i][0] <= '9') || polish[i][0] == 'j'){
-            if (polish[i][strlen(polish[i])-1] == 'j'){ // if number is imaginary
-                stack[count] = strtod(polish[i], 0) * I;
-                if (polish[i][0] == 'j'){ // if string consists only of one 'j'
+    for (int i = 0; i < currentVar->countPolish; ++i){
+        if ((currentVar->polish[i][0] >= '0' && currentVar->polish[i][0] <= '9') || currentVar->polish[i][0] == 'j'){
+            if (currentVar->polish[i][strlen(currentVar->polish[i])-1] == 'j'){ // if number is imaginary
+                stack[count] = strtod(currentVar->polish[i], 0) * I;
+                if (currentVar->polish[i][0] == 'j'){ // if string consists only of one 'j'
                     stack[count] = I;
                 }
                 count++;
             }
             else {
-                stack[count++] = strtod(polish[i], 0);
+                stack[count++] = strtod(currentVar->polish[i], 0);
             }
         }
-        else if (inOperators(&polish[i][0]) != -1){
-            int index = inOperators(&polish[i][0]);
+        else if (inOperators(&currentVar->polish[i][0]) != -1){
+            int index = inOperators(&currentVar->polish[i][0]);
             stack[count - 2] = opers[index](stack[count - 2], stack[count - 1]);
             count--;
         }
-        else if (inFunctions(polish[i]) != -1){
-            int index = inFunctions(polish[i]);
+        else if (inFunctions(currentVar->polish[i]) != -1){
+            int index = inFunctions(currentVar->polish[i]);
             stack[count - 1] = func[index](stack[count - 1]);
+        }
+        else{
+            // adding variable value to stack
+            stack[count++] = data.variables[inData(currentVar->polish[i], &data)].value;
         }
     }
 
-    double complex res = stack[0];
+    currentVar->value = stack[0];
     free(stack);
-    return res;
+}
+
+void printAnswer(Var *var) {
+    if (creal(var->value) != 0 && cimag(var->value) != 0) {
+        if (cimag(var->value) > 0) {
+            fprintf(fw, "%s = %.3f + %.3fj\n", var->name, creal(var->value), cimag(var->value));
+        }
+        else {
+            fprintf(fw, "%s = %.3f - %.3fj\n", var->name, creal(var->value), -1 * cimag(var->value));
+        }
+    }
+    else if (creal(var->value) != 0) {
+        fprintf(fw, "%s = %.3f\n", var->name, creal(var->value));
+    }
+    else if (cimag(var->value) != 0) {
+        fprintf(fw, "%s = %.3fj\n", var->name, cimag(var->value));
+    }
+    else {
+        fprintf(fw, "%s = %.3f\n", var->name, creal(var->value));
+    }
 }
 
 
@@ -216,22 +280,62 @@ int main() {
     fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
     fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
+    initData(&data);
+
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
 
     while (fgets(inp, MAXSIZE*MAXSIZE, fr)) {
-        char polish[MAXSIZE][MAXSIZE] = { 0 };  // reversed polish notation
-        int m = 0;
+        Var mainExp;  // main expression
+        initVar(&mainExp);
+        strcpy(mainExp.name, "Answer");  // set mainExp name as an Answer
 
         // clean input from spaces and '\n'
         cleanInput(inp);
 
-        // create RPN from input string
-        createRPN(polish, &m, inp);
+        // create RPN from input string - the main expression of input!
+        createRPN(&mainExp, inp);
+
+        // process "count" numbers, if count = 0 -> it won't launch and everything will be ok!
+        fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
+        for (int i = 0; i < data.count - 2 && inp[0] != '\0'; i++) {
+            cleanInput(inp);  // clean it
+
+            char varName[MAXSIZE] = { 0 };  // variable's name
+            int start = 0;  // pointer for changing input to expression
+            getSymbols(inp, varName, &start);  // get the name of the variable
+            toExpression(inp, &start);
+
+            int pos = inData(varName, &data);  // search the position of variable in Data
+            if (pos == data.count && inp[0] != 0){
+                addVar(varName, &data);
+            }
+            createRPN(&data.variables[pos], inp);  // create RPN for the variable
+
+            fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
+        }
+
+        defineVar(&data.variables[0]);
+        defineVar(&data.variables[1]);
+        // calculate RPN for every variable (from the bottom to the top)
+        for (int i = 0; i < data.count; ++i) {
+            int flag = 0;
+            for (int j = 0; j < data.count; ++j) {
+                if (data.variables[j].countUnknown == 0 && data.variables[j].isDefined == 0) {
+                    flag++;
+                    calculateRPN(&data.variables[j]);
+                    defineVar(&data.variables[j]);
+                    printAnswer(&data.variables[j]);
+                }
+            }
+            if (flag == 0){
+                break;
+            }
+        }
 
         // calculate RPN (reversed polish notation)
-        double complex res = calculateRPN(polish, m);
+        calculateRPN(&mainExp);
 
         // print out the result in output.txt file
-        fprintf(fw, "Answer: %.3f + %.3fj\n", creal(res), cimag(res));
+        printAnswer(&mainExp);
     }
 }
