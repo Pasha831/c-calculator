@@ -181,7 +181,11 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
             }
             else if (strcmp(str, "pow") != 0) {  // if it's not a function or pow function, that we skip
                 int index = inData(str, &data);
-                if (index == data.count) {  // if there is no such variable in Data
+                if (currentVar == &data.variables[index]) {
+                    currentVar->polish[0][0] = '\0';
+                    return;
+                }
+                else if (index == data.count) {  // if there is no such variable in Data
                     addVar(str, &data);  // create it and increment count in Data
                 }
                 if (inLocalVars(currentVar, &data.variables[index]) == -1) {
@@ -277,20 +281,29 @@ void printAnswer(Var *var) {
     }
 }
 
+//int isVariable(char* inp) {
+//    for (int i = 0; i < strlen(inp); i++) {
+//        if (inp[i] == '=') {
+//            return 1;
+//        }
+//    }
+//    return 0;
+//}
+
 
 int main() {
     // input here your own files destination
     fr = fopen("D:\\CLionProjects\\c-calculator\\input.txt", "rt");
     fw = fopen("D:\\CLionProjects\\c-calculator\\output.txt", "wt");
 
-    initData(&data);
-
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
 
     while (fgets(inp, MAXSIZE*MAXSIZE, fr)) {
+        initData(&data);
+
         Var mainExp;  // main expression
         initVar(&mainExp);
-        strcpy(mainExp.name, "Answer");  // set mainExp name as an Answer
+        strcpy(mainExp.name, "Main Answer");  // set mainExp name as an Answer
 
         // clean input from spaces and '\n'
         cleanInput(inp);
@@ -309,10 +322,21 @@ int main() {
             toExpression(inp, &start);
 
             int pos = inData(varName, &data);  // search the position of variable in Data
-            if (pos == data.count && inp[0] != 0){
+            if (pos == data.count){
                 addVar(varName, &data);
             }
-            createRPN(&data.variables[pos], inp);  // create RPN for the variable
+
+            if (data.variables[pos].polish[0][0] == '\0') {
+                createRPN(&data.variables[pos], inp);  // create RPN for the variable
+                if (data.variables[pos].polish[0][0] == '\0') {
+                    fprintf(fw, "%s can't be defined properly, because it points to itself.\n", varName);
+                    --i;
+                }
+            }
+            else {
+                fprintf(fw, "%s is already defined.\n", varName);
+                --i;
+            }
 
             fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
         }

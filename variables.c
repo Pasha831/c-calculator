@@ -13,6 +13,7 @@ void initData(Data *data) {
 
 void initVar(Var *var) {
     var->name[0] = '\0';  // empty string
+    var->polish[0][0] = '\0';
     var->value = 0;
     var->isDefined = 0;
 
