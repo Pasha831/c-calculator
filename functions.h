@@ -1,8 +1,11 @@
 #include <tgmath.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #ifndef C_CALCULATOR_FUNCTIONS_H
 #define C_CALCULATOR_FUNCTIONS_H
 
+void zeroDivisionException(FILE *fw);
 double complex add(double complex a, double complex b);
 double complex subtract(double complex a, double complex b);
 double complex multiply(double complex a, double complex b);

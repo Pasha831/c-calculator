@@ -33,9 +33,9 @@ j - мнимая единица
 В выражении могут быть функции
 cos
 sin
-tg
-log
-ln
+* tg
+* log
+* ln
 sqrt
 pow
 abs

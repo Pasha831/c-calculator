@@ -1,5 +1,10 @@
 #include "functions.h"
 
+void zeroDivisionException(FILE *fw) {
+    fprintf(fw, "Zero division exception.\n");
+    exit(1);
+}
+
 double complex add(double complex a, double complex b) {
     return a + b;
 }

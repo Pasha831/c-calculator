@@ -244,9 +244,12 @@ void calculateRPN(Var* currentVar) {
             int index = inFunctions(currentVar->polish[i]);
             stack[count - 1] = func[index](stack[count - 1]);
         }
-        else{
+        else {
             // adding variable value to stack
             stack[count++] = data.variables[inData(currentVar->polish[i], &data)].value;
+        }
+        if (isfinite(creal(stack[count - 1])) == 0 || isfinite(cimag(stack[count - 1])) == 0) {
+            zeroDivisionException(fw);
         }
     }
 
@@ -267,7 +270,7 @@ void printAnswer(Var *var) {
         fprintf(fw, "%s = %g\n", var->name, creal(var->value));
     }
     else if (cimag(var->value) != 0) {
-        fprintf(fw, "%s = %g\n", var->name, cimag(var->value));
+        fprintf(fw, "%s = %gj\n", var->name, cimag(var->value));
     }
     else {
         fprintf(fw, "%s = %g\n", var->name, creal(var->value));
