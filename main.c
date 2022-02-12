@@ -257,28 +257,28 @@ void calculateRPN(Var* currentVar) {
 void printAnswer(Var *var) {
     if (creal(var->value) != 0 && cimag(var->value) != 0) {
         if (cimag(var->value) > 0) {
-            fprintf(fw, "%s = %.3f + %.3fj\n", var->name, creal(var->value), cimag(var->value));
+            fprintf(fw, "%s = %g + %gj\n", var->name, creal(var->value), cimag(var->value));
         }
         else {
-            fprintf(fw, "%s = %.3f - %.3fj\n", var->name, creal(var->value), -1 * cimag(var->value));
+            fprintf(fw, "%s = %g - %gj\n", var->name, creal(var->value), -1 * cimag(var->value));
         }
     }
     else if (creal(var->value) != 0) {
-        fprintf(fw, "%s = %.3f\n", var->name, creal(var->value));
+        fprintf(fw, "%s = %g\n", var->name, creal(var->value));
     }
     else if (cimag(var->value) != 0) {
-        fprintf(fw, "%s = %.3fj\n", var->name, cimag(var->value));
+        fprintf(fw, "%s = %g\n", var->name, cimag(var->value));
     }
     else {
-        fprintf(fw, "%s = %.3f\n", var->name, creal(var->value));
+        fprintf(fw, "%s = %g\n", var->name, creal(var->value));
     }
 }
 
 
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\Users\\medve\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("D:\\CLionProjects\\c-calculator\\input.txt", "rt");
+    fw = fopen("D:\\CLionProjects\\c-calculator\\output.txt", "wt");
 
     initData(&data);
 
