@@ -102,8 +102,23 @@ void getSymbols(char* inp, char* str, int* i){
 void cleanInput(char* inp){
     char cleanedInput[MAXSIZE*MAXSIZE] = { 0 };
     int count = 0;
-
+    int countBracket[MAXSIZE] = {0};
+    int countMinus = 0;
     for (int i = 0; inp[i] != '\0' && inp[i] != '\n'; ++i){
+        if (inp[i] == '-' && (count == 0 || (inOperators(&cleanedInput[count-1]) != -1) && cleanedInput[count-1] != ')' && cleanedInput[count-1] != '(')) {
+            cleanedInput[count++] = '(';
+            countMinus++;
+        }
+        else if (countMinus && inp[i] == '(') {
+            countBracket[countMinus]++;
+        }
+        else if (countMinus && inp[i] == ')') {
+            countBracket[countMinus]--;
+        }
+        else if (countMinus && countBracket[countMinus] == 0 && inOperators(&inp[i]) != -1 && inp[i] != '(') {
+            cleanedInput[count++] = ')';
+            countMinus--;
+        }
         if (inp[i] == ',') {
             cleanedInput[count++] = ')';
             cleanedInput[count++] = '^';
@@ -113,7 +128,9 @@ void cleanInput(char* inp){
             cleanedInput[count++] = inp[i];
         }
     }
-
+    while (countMinus--) {
+        cleanedInput[count++] = ')';
+    }
     strcpy(inp, cleanedInput);
 }
 
