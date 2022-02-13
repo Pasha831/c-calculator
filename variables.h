@@ -3,6 +3,7 @@
 #include <tgmath.h>
 #define MAXSIZE 100
 #define MAX_VARS 100
+#define COUNT_CONST 2
 
 typedef struct Var Var;
 typedef struct Data Data;
@@ -33,5 +34,6 @@ int inData(char *varName, Data *data);
 void addVar(char *varName, Data *data);
 int inLocalVars(Var *mainVar, Var *desiredVar);
 void defineVar(Var* var);
+void defineConst(Data *data);
 
 #endif

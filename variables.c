@@ -53,3 +53,9 @@ void defineVar(Var* var) {
         var->fathers[i]->countUnknown--;
     }
 }
+
+void defineConst(Data *data) {
+    for (int i = 0; i < COUNT_CONST; ++i) {
+        defineVar(&data->variables[i]);
+    }
+}

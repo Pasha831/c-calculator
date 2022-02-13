@@ -223,8 +223,8 @@ void calculateRPN(Var* currentVar) {
                                                                  subtract,
                                                                  multiply,
                                                                  divide,
-                                                                 cpow,
-                                                                 cpow};
+                                                                 powow,
+                                                                 powow};
 
     for (int i = 0; i < currentVar->countPolish; ++i){
         if ((currentVar->polish[i][0] >= '0' && currentVar->polish[i][0] <= '9') || currentVar->polish[i][0] == 'j'){
@@ -338,7 +338,7 @@ int main() {
         createRPN(&mainExp, inp);
 
         // process "count" numbers, if count = 0 -> it won't launch and everything will be ok!
-        for (int i = 0; i < data.count - 2 && fgets(inp, MAXSIZE*MAXSIZE, fr) && isVariable(inp); i++) {
+        for (int i = 0; i < data.count - COUNT_CONST && fgets(inp, MAXSIZE*MAXSIZE, fr) && isVariable(inp); i++) {
             cleanInput(inp);  // clean it
 
             char varName[MAXSIZE] = { 0 };  // variable's name
@@ -366,8 +366,7 @@ int main() {
             }
         }
 
-        defineVar(&data.variables[0]);
-        defineVar(&data.variables[1]);
+        defineConst(&data);
         // calculate RPN for every variable
         for (int i = 0; i < data.count; ++i) {
             int flag = 0;

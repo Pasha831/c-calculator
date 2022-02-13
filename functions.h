@@ -15,5 +15,5 @@ double complex clog10(double complex x);
 double complex real(double complex x);
 double complex imag(double complex x);
 double complex phase(double complex x);
-
+double complex powow(double complex x, double complex y);
 #endif //C_CALCULATOR_FUNCTIONS_H
