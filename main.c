@@ -281,45 +281,72 @@ void printAnswer(Var *var) {
     }
 }
 
-//int isVariable(char* inp) {
-//    for (int i = 0; i < strlen(inp); i++) {
-//        if (inp[i] == '=') {
-//            return 1;
-//        }
-//    }
-//    return 0;
-//}
+int isVariable(char* inp) {
+    for (int i = 0; i < strlen(inp); i++) {
+        if (inp[i] == '=') {
+            return 1;
+        }
+    }
+    return 0;
+}
 
+int bracketSequence(char* inp) {
+    int count = 0;
+    for (int i = 0; i < strlen(inp) && count >= 0; ++i){
+        if (inp[i] == '(') {
+            count++;
+        }
+        else if (inp[i] == ')') {
+            count--;
+        }
+    }
+    return count == 0 ? 1 : 0;
+}
 
 int main() {
     // input here your own files destination
-    fr = fopen("D:\\CLionProjects\\c-calculator\\input.txt", "rt");
-    fw = fopen("D:\\CLionProjects\\c-calculator\\output.txt", "wt");
+    fr = fopen("C:\\users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    fw = fopen("C:\\users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
+    int countExp = 1;
 
-    while (fgets(inp, MAXSIZE*MAXSIZE, fr)) {
+    while (inp[0] != 0 || fgets(inp, MAXSIZE*MAXSIZE, fr)) {
+        if (isVariable(inp)) {
+            inp[0] = 0;
+            continue;
+        }
         initData(&data);
 
         Var mainExp;  // main expression
         initVar(&mainExp);
-        strcpy(mainExp.name, "Main Answer");  // set mainExp name as an Answer
+        char buff[MAXSIZE];
+        char exp[MAXSIZE] = "Answer to expression ";
+        itoa(countExp++, buff, 10);
+        strcat(exp, buff);
+        strcpy(mainExp.name, exp);  // set mainExp name as an Answer
 
         // clean input from spaces and '\n'
         cleanInput(inp);
+        if (!bracketSequence(inp)) {
+            fprintf(fw, "Wrong bracket sequence or extra comma.\n");
+            inp[0] = 0;
+            continue;
+        }
 
         // create RPN from input string - the main expression of input!
         createRPN(&mainExp, inp);
 
         // process "count" numbers, if count = 0 -> it won't launch and everything will be ok!
-        fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
-        for (int i = 0; i < data.count - 2 && inp[0] != '\0'; i++) {
+        for (int i = 0; i < data.count - 2 && fgets(inp, MAXSIZE*MAXSIZE, fr) && isVariable(inp); i++) {
             cleanInput(inp);  // clean it
 
             char varName[MAXSIZE] = { 0 };  // variable's name
             int start = 0;  // pointer for changing input to expression
             getSymbols(inp, varName, &start);  // get the name of the variable
-            toExpression(inp, &start);
+            char input[MAXSIZE]; // additional input string for cutting (so that original inp had a "=" sign)
+            strcpy(input, inp);
+            toExpression(input, &start);
 
             int pos = inData(varName, &data);  // search the position of variable in Data
             if (pos == data.count){
@@ -327,7 +354,7 @@ int main() {
             }
 
             if (data.variables[pos].polish[0][0] == '\0') {
-                createRPN(&data.variables[pos], inp);  // create RPN for the variable
+                createRPN(&data.variables[pos], input);  // create RPN for the variable
                 if (data.variables[pos].polish[0][0] == '\0') {
                     fprintf(fw, "%s can't be defined properly, because it points to itself.\n", varName);
                     --i;
@@ -337,17 +364,17 @@ int main() {
                 fprintf(fw, "%s is already defined.\n", varName);
                 --i;
             }
-
-            fgets(inp, MAXSIZE*MAXSIZE, fr);  // get a new line with variable
         }
 
         defineVar(&data.variables[0]);
         defineVar(&data.variables[1]);
-        // calculate RPN for every variable (from the bottom to the top)
+        // calculate RPN for every variable
         for (int i = 0; i < data.count; ++i) {
             int flag = 0;
             for (int j = 0; j < data.count; ++j) {
-                if (data.variables[j].countUnknown == 0 && data.variables[j].isDefined == 0) {
+                if (data.variables[j].countUnknown == 0
+                    && data.variables[j].isDefined == 0
+                    && data.variables[j].polish[0][0] != '\0') {
                     flag++;
                     calculateRPN(&data.variables[j]);
                     defineVar(&data.variables[j]);
@@ -359,10 +386,22 @@ int main() {
             }
         }
 
-        // calculate RPN (reversed polish notation)
-        calculateRPN(&mainExp);
+        if (mainExp.countUnknown == 0) {
+            // calculate RPN (reversed polish notation)
+            calculateRPN(&mainExp);
 
-        // print out the result in output.txt file
-        printAnswer(&mainExp);
+            // print out the result in output.txt file
+            printAnswer(&mainExp);
+            inp[0] = 0;
+        }
+        else {
+            fprintf(fw, "Expression %d can't be calculated.\n", countExp);
+            for (int i = 0; i < mainExp.countChildren; ++i) {
+                if (mainExp.childrenVars[i]->isDefined == 0) {
+                    fprintf(fw, "Variable %s is not defined.\n", mainExp.childrenVars[i]->name);
+                }
+            }
+        }
+        fprintf(fw, "\n");
     }
 }
