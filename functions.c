@@ -37,3 +37,20 @@ double complex imag(double complex x) {
 double complex phase(double complex x) {
     return carg(x);
 }
+
+double complex powow(double complex x, double complex y) {
+    if (cimag(x) == 0 && cimag(y) == 0 && creal(x) < 0){
+        if (creal(y) == (int)creal(y)){
+            return creal(cpow(x, y));
+        }
+    }
+    else if (creal(x) == 0 && cimag(y) == 0 && creal(y) == (int)creal(y)){
+        if ((int)creal(y) % 2 == 0){
+            return creal(cpow(x, y));
+        }
+        else if ((int)creal(y) % 2 != 0){
+            return cimag(cpow(x, y))*I;
+        }
+    }
+    return cpow(x, y);
+}
