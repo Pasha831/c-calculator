@@ -1,11 +1,10 @@
 #include "mainMethods.h"
 #include "functions.h"
-#include "variables.h"
 
 int main() {
     // input here your own files destination
-    FILE *fr = fopen("D:\\CLionProjects\\c-calculator\\input.txt", "rt");
-    FILE *fw = fopen("D:\\CLionProjects\\c-calculator\\output.txt", "wt");
+    FILE *fr = fopen("C:\\users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    FILE *fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     Data data;  // storage of variables
 
@@ -30,16 +29,18 @@ int main() {
         initVar(&mainExp);
         createExpressionName(&mainExp, &countExp);
 
-        // clean input from spaces and '\n' and copy it
-        cleanInput(inp);
-        strcpy(previousInp, inp);
-
         // check wrong bracket sequence: calculate if is OK, otherwise continue and clean input
         if (!bracketSequence(inp)) {
             fprintf(fw, "Wrong bracket sequence or extra comma.\n");
             inp[0] = 0;
             continue;
         }
+        // clean input from spaces and '\n'
+        int error = cleanInput(inp);
+        if (errorCheck(fw, error)) {
+            continue;
+        }
+        strcpy(previousInp, inp);
 
         // create RPN from input expression
         createRPN(&mainExp, inp, &data);
