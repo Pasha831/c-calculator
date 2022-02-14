@@ -310,7 +310,7 @@ int main() {
 
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
     int countExp = 1;
-
+    char previousInp[MAXSIZE*MAXSIZE] = { 0 };
     while (inp[0] != 0 || fgets(inp, MAXSIZE*MAXSIZE, fr)) {
         if (isVariable(inp)) {
             inp[0] = 0;
@@ -328,6 +328,7 @@ int main() {
 
         // clean input from spaces and '\n'
         cleanInput(inp);
+        strcpy(previousInp, inp);
         if (!bracketSequence(inp)) {
             fprintf(fw, "Wrong bracket sequence or extra comma.\n");
             inp[0] = 0;
@@ -394,11 +395,14 @@ int main() {
             inp[0] = 0;
         }
         else {
-            fprintf(fw, "Expression %d can't be calculated.\n", countExp);
+            fprintf(fw, "Expression %d can't be calculated.\n", countExp-1);
             for (int i = 0; i < mainExp.countChildren; ++i) {
                 if (mainExp.childrenVars[i]->isDefined == 0) {
                     fprintf(fw, "Variable %s is not defined.\n", mainExp.childrenVars[i]->name);
                 }
+            }
+            if (strcmp(inp, previousInp) == 0) {
+                inp[0] = 0;
             }
         }
         fprintf(fw, "\n");

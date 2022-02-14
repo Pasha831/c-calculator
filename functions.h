@@ -1,6 +1,7 @@
 #include <tgmath.h>
 #include <stdlib.h>
 #include <stdio.h>
+#define EPS 1e-15
 
 #ifndef C_CALCULATOR_FUNCTIONS_H
 #define C_CALCULATOR_FUNCTIONS_H

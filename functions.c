@@ -40,10 +40,7 @@ double complex phase(double complex x) {
 
 double complex powow(double complex x, double complex y) {
     if (cimag(x) == 0 && cimag(y) == 0 && creal(x) < 0){
-        if (cabs(y) < 1){
-            return cimag(cpow(x, y))*I;
-        }
-        else {
+        if (creal(y) == (int)creal(y)){
             return creal(cpow(x, y));
         }
     }
