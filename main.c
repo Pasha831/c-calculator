@@ -303,28 +303,37 @@ int bracketSequence(char* inp) {
     return count == 0 ? 1 : 0;
 }
 
+void createExpressionName(Var *exp, int *countExp) {
+    char buff[MAXSIZE];
+    char tempExp[MAXSIZE] = "Answer to expression ";
+    itoa(*countExp++, buff, 10);
+    strcat(tempExp, buff);
+    strcpy(exp->name, tempExp);  // set mainExp name as an Answer
+}
+
 int main() {
     // input here your own files destination
-    fr = fopen("C:\\users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    fw = fopen("C:\\users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    fr = fopen("D:\\CLionProjects\\c-calculator\\input.txt", "rt");
+    fw = fopen("D:\\CLionProjects\\c-calculator\\output.txt", "wt");
 
     char inp[MAXSIZE*MAXSIZE] = { 0 };  // each line of input
-    int countExp = 1;
-    char previousInp[MAXSIZE*MAXSIZE] = { 0 };
+    char previousInp[MAXSIZE*MAXSIZE] = { 0 };  // to store previous line of input
+    int countExp = 1;  // number of expressions from user
+
+    // if we have non processed expression - let's process it
+    // else - let's read another line of input
     while (inp[0] != 0 || fgets(inp, MAXSIZE*MAXSIZE, fr)) {
+        // if input line is not an expression - just skip it
         if (isVariable(inp)) {
             inp[0] = 0;
             continue;
         }
+
         initData(&data);
 
         Var mainExp;  // main expression
         initVar(&mainExp);
-        char buff[MAXSIZE];
-        char exp[MAXSIZE] = "Answer to expression ";
-        itoa(countExp++, buff, 10);
-        strcat(exp, buff);
-        strcpy(mainExp.name, exp);  // set mainExp name as an Answer
+        createExpressionName(&mainExp, &countExp);
 
         // clean input from spaces and '\n'
         cleanInput(inp);

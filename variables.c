@@ -1,6 +1,7 @@
 #include "variables.h"
 #include <string.h>
 
+// initializes storage for variables and constants
 void initData(Data *data) {
     data->count = 0;
     addVar("PI", data);
