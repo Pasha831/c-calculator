@@ -91,12 +91,13 @@ int cleanInput(char* inp){
     char cleanedInput[MAXSIZE*MAXSIZE] = { 0 };
     int count = 0;
     int countBracket[MAXSIZE] = {0};
+    int withBracket[MAXSIZE] = {0};
     int countPow = 0;
     int countFunc = 0;
     int isFunc = 0;
     int isPow = 0;
     int isVar = 0;
-    int isNum = 0;
+    int isNum = 0; // it's awful, but lawful
     int dot = 0;
     int start = 0;
     for (int i = 0; inp[i] != '\0' && inp[i] != '\n'; ++i){
@@ -113,7 +114,8 @@ int cleanInput(char* inp){
                 if (dot) {
                     inp[0] = 0;
                     return 1;
-                } else {
+                }
+                else {
                     if (inp[i] == ',') {
                         inp[i] = '.';
                     }
@@ -138,18 +140,22 @@ int cleanInput(char* inp){
         if (countFunc && isFunc) {
             if (inp[i] == '(') {
                 isFunc = 0;
-                countFunc--;
+                withBracket[countFunc] = 1;
+                countBracket[countFunc]++;
             } else if (inOperators(&inp[i]) != -1) {
                 inp[0] = 0;
                 return 2;
             } else if (inp[i] != ' ' && start < i) {
                 isFunc = 0;
+                withBracket[countFunc] = 0;
                 cleanedInput[count++] = '(';
             }
         }
         else if (countFunc) {
             while (countFunc > 0 && countBracket[countFunc] == 0 && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
-                cleanedInput[count++] = ')';
+                if (withBracket[countFunc] == 0) {
+                    cleanedInput[count++] = ')';
+                }
                 countFunc--;
             }
             if (inp[i] == '(') {
@@ -163,16 +169,19 @@ int cleanInput(char* inp){
             if (isPow && inp[i] != '(' && inp[i] != ' ') {
                 inp[0] = 0;
                 return 3;
-            } else if (isPow && inp[i] == '('){
+            }
+            else if (isPow && inp[i] == '('){
                 isPow = 0;
-            } else if (inp[i] == ',') {
+            }
+            else if (inp[i] == ',') {
                 cleanedInput[count++] = ')';
                 cleanedInput[count++] = '^';
                 cleanedInput[count++] = '(';
                 i++;
                 countPow--;
             }
-        } else if (!isNum && !countPow && inp[i] == ',') {
+        }
+        else if (!isNum && !countPow && inp[i] == ',') {
             inp[0] = 0;
             return 4;
         }
@@ -184,12 +193,14 @@ int cleanInput(char* inp){
             if (inFunctions(str) != -1) {
                 isFunc = 1;
                 countFunc++;
-            } else if (strcmp(str, "pow") == 0) {
+            }
+            else if (strcmp(str, "pow") == 0) {
                 i = start;
                 isPow = 1;
                 countPow++;
                 continue;
-            } else {
+            }
+            else {
                 isVar = 1;
                 if (cleanedInput[count-1] == ')') {
                     cleanedInput[count++] = '*';
@@ -201,14 +212,17 @@ int cleanInput(char* inp){
             cleanedInput[count++] = inp[i];
         }
     }
-    while (countFunc--) {
-        cleanedInput[count++] = ')';
+    while (countFunc) {
+        if (withBracket[countFunc--] == 0) {
+            cleanedInput[count++] = ')';
+        }
     }
 
     strcpy(inp, cleanedInput);
     printf( "%s\n", inp);
     return 0;
 }
+
 
 // deletes variable name and "=" sign from input string to create an expression
 void toExpression(char *inp, int *start) {
