@@ -4,9 +4,11 @@
 // initializes storage for variables and constants
 void initData(Data *data) {
     data->count = 0;
+
     addVar("PI", data);
     data->variables[data->count-1].value = M_PI;
     data->variables[data->count-1].isDefined = 1;
+
     addVar("e", data);
     data->variables[data->count-1].value = M_E;
     data->variables[data->count-1].isDefined = 1;
@@ -55,7 +57,7 @@ void defineVar(Var* var) {
     }
 }
 
-void defineConst(Data *data) {
+void defineConstants(Data *data) {
     for (int i = 0; i < COUNT_CONST; ++i) {
         defineVar(&data->variables[i]);
     }

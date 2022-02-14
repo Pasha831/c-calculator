@@ -34,6 +34,6 @@ int inData(char *varName, Data *data);
 void addVar(char *varName, Data *data);
 int inLocalVars(Var *mainVar, Var *desiredVar);
 void defineVar(Var* var);
-void defineConst(Data *data);
+void defineConstants(Data *data);
 
 #endif

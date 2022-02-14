@@ -10,7 +10,7 @@
 FILE *fr;
 FILE *fw;
 
-Data data;  // made ot global, in order to have access to it everywhere in program
+Data data;  // made it global, in order to have access to it everywhere in program
 
 // returns an index of an operator from the list or -1 if operator is not in the list
 int inOperators(const char *inp) {
@@ -19,11 +19,10 @@ int inOperators(const char *inp) {
                          "*",
                          "/",
                          "^",
-                         ",",  // ^ operator for pow(..., ...)
                          "(",
                          ")",
                          "="};
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
         if (*inp == *operators[i]) {
             return i;
         }
@@ -136,11 +135,11 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
         if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == 'j') {  // is a part of a digit?
             getNumber(inp, currentVar->polish, &currentVar->countPolish, &i);
         }
-        else if (inOperators(&inp[i]) != -1) {  // is an operator?
+        else if (inOperators(&inp[i]) != -1) {
             char operator[MAXSIZE] = { 0 };
             operator[0] = inp[i];
 
-            // possible solution for unary minus (does not work with some binary functions)
+            // possible solution for unary minus
             if (operator[0] == '-' && (inp[i-1] == '(' || i == 0)){
                 strcpy(currentVar->polish[currentVar->countPolish++], "0");
             }
@@ -155,11 +154,11 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
                         strcpy(currentVar->polish[currentVar->countPolish++], stack[k]);  // pop operator
                         strcpy(stack[k], "\0");  // clean the position
                     }
-                    strcpy(stack[k], "\0");// when we reached '(': clean '('
+                    strcpy(stack[k], "\0");  // when we reached '(': clean '('
                     if (inFunctions(stack[k-1]) != -1){  // if there is a function before '('
                         strcpy(currentVar->polish[currentVar->countPolish++], stack[--k]);  // pop function
                     }
-                    break;  // then break the search
+                    break;
                 }
                 else if (precedence(&inp[i]) < precedence(stack[k - 1]) || stack[k - 1][0] == '(') {  // if previous operator is '(' - add it anyway
                     strcpy(stack[k++], operator);
@@ -169,18 +168,23 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
                     strcpy(currentVar->polish[currentVar->countPolish++], stack[--k]);
                 }
             }
-            if (k == 0 && operator[0] != ')') {  // no need to add ')' at stack
+
+            // empty - fill it! / no need to add ')' at stack
+            if (k == 0 && operator[0] != ')') {
                 strcpy(stack[k++], operator);
             }
         }
         else {
             char str[MAXSIZE] = { 0 };
             getSymbols(inp, str, &i);
+
             if (inFunctions(str) != -1){  // if str is a function
                 strcpy(stack[k++], str);  // adding to operation stack
             }
-            else if (strcmp(str, "pow") != 0) {  // if it's not a function or pow function, that we skip
+            else if (strcmp(str, "pow") != 0) {  // if it's not a function or pow function
                 int index = inData(str, &data);
+
+                // check for redefinition of variable
                 if (currentVar == &data.variables[index]) {
                     currentVar->polish[0][0] = '\0';
                     return;
@@ -188,25 +192,32 @@ void createRPN(Var* currentVar, char inp[MAXSIZE]) {
                 else if (index == data.count) {  // if there is no such variable in Data
                     addVar(str, &data);  // create it and increment count in Data
                 }
+
+                // if it's a variable and there is no such variable in local vars of it
                 if (inLocalVars(currentVar, &data.variables[index]) == -1) {
                     currentVar->countUnknown++;
                     currentVar->childrenVars[currentVar->countChildren++] = &data.variables[index];
                     data.variables[index].fathers[data.variables[index].countFathers++] = currentVar;
                 }
-                strcpy(currentVar->polish[currentVar->countPolish++], str);  // add it anyway to the RPN
+
+                // add it anyway to the RPN
+                strcpy(currentVar->polish[currentVar->countPolish++], str);
             }
         }
     }
 
-    while (k > 0) {  // push the remaining operations
+    // push the remaining operations
+    while (k > 0) {
         strcpy(currentVar->polish[currentVar->countPolish++], stack[--k]);
     }
 }
 
 // function, that performs calculations from reversed polish notation
 void calculateRPN(Var* currentVar) {
+    // gives the result of calculation in stack[0] after all necessary calculations
     double complex* stack = (double complex*)calloc(currentVar->countPolish, sizeof(double complex));
     int count = 0;
+
     double complex (*func[])(double complex) = {ccos,
                                                 csin,
                                                 ctan,
@@ -226,13 +237,17 @@ void calculateRPN(Var* currentVar) {
                                                                  powow,
                                                                  powow};
 
+    // process RPN
     for (int i = 0; i < currentVar->countPolish; ++i){
-        if ((currentVar->polish[i][0] >= '0' && currentVar->polish[i][0] <= '9') || currentVar->polish[i][0] == 'j'){
-            if (currentVar->polish[i][strlen(currentVar->polish[i])-1] == 'j'){ // if number is imaginary
+        if ((currentVar->polish[i][0] >= '0' && currentVar->polish[i][0] <= '9') || currentVar->polish[i][0] == 'j') {
+            if (currentVar->polish[i][strlen(currentVar->polish[i])-1] == 'j') {  // if number is imaginary
                 stack[count] = strtod(currentVar->polish[i], 0) * I;
-                if (currentVar->polish[i][0] == 'j'){ // if string consists only of one 'j'
+
+                // if string consists only of one 'j'
+                if (currentVar->polish[i][0] == 'j') {
                     stack[count] = I;
                 }
+
                 count++;
             }
             else {
@@ -257,10 +272,12 @@ void calculateRPN(Var* currentVar) {
         }
     }
 
+    // returns the value to variable
     currentVar->value = stack[0];
     free(stack);
 }
 
+// convenient print of expression
 void printAnswer(Var *var) {
     if (creal(var->value) != 0 && cimag(var->value) != 0) {
         if (cimag(var->value) > 0) {
@@ -281,6 +298,7 @@ void printAnswer(Var *var) {
     }
 }
 
+// checks whether input line have a '=' sign
 int isVariable(char* inp) {
     for (int i = 0; i < strlen(inp); i++) {
         if (inp[i] == '=') {
@@ -290,25 +308,48 @@ int isVariable(char* inp) {
     return 0;
 }
 
+// checking of right bracket sequence
 int bracketSequence(char* inp) {
     int count = 0;
-    for (int i = 0; i < strlen(inp) && count >= 0; ++i){
+    for (int i = 0; i < strlen(inp) && count >= 0; ++i) {
         if (inp[i] == '(') {
             count++;
-        }
-        else if (inp[i] == ')') {
+        } else if (inp[i] == ')') {
             count--;
         }
     }
     return count == 0 ? 1 : 0;
 }
 
+// creates expression name with suitable number in queue of expressions
 void createExpressionName(Var *exp, int *countExp) {
     char buff[MAXSIZE];
     char tempExp[MAXSIZE] = "Answer to expression ";
     itoa(*countExp++, buff, 10);
     strcat(tempExp, buff);
     strcpy(exp->name, tempExp);  // set mainExp name as an Answer
+}
+
+// calculate ol RPNs of variables in Data, if it's possible
+void calculateAllDataVariables() {
+    for (int i = 0; i < data.count; ++i) {
+        int flag = 0;  // feature to speed up O(n^2) definition loop
+
+        for (int j = 0; j < data.count; ++j) {
+            if (data.variables[j].countUnknown == 0 && data.variables[j].isDefined == 0 && data.variables[j].polish[0][0] != '\0') {
+                calculateRPN(&data.variables[j]);
+                defineVar(&data.variables[j]);
+                printAnswer(&data.variables[j]);
+
+                flag++;
+            }
+        }
+
+        // if there were no definitions -> no sense to go further
+        if (flag == 0){
+            break;
+        }
+    }
 }
 
 int main() {
@@ -320,7 +361,7 @@ int main() {
     char previousInp[MAXSIZE*MAXSIZE] = { 0 };  // to store previous line of input
     int countExp = 1;  // number of expressions from user
 
-    // if we have non processed expression - let's process it
+    // if we have not processed expression - let's process it
     // else - let's read another line of input
     while (inp[0] != 0 || fgets(inp, MAXSIZE*MAXSIZE, fr)) {
         // if input line is not an expression - just skip it
@@ -329,42 +370,51 @@ int main() {
             continue;
         }
 
+        // new expression - new stored variables
         initData(&data);
 
-        Var mainExp;  // main expression
+        // main expression
+        Var mainExp;
         initVar(&mainExp);
         createExpressionName(&mainExp, &countExp);
 
-        // clean input from spaces and '\n'
+        // clean input from spaces and '\n' and copy it
         cleanInput(inp);
         strcpy(previousInp, inp);
+
+        // check wrong bracket sequence: calculate if is OK, otherwise continue and clean input
         if (!bracketSequence(inp)) {
             fprintf(fw, "Wrong bracket sequence or extra comma.\n");
             inp[0] = 0;
             continue;
         }
 
-        // create RPN from input string - the main expression of input!
+        // create RPN from input expression
         createRPN(&mainExp, inp);
 
-        // process "count" numbers, if count = 0 -> it won't launch and everything will be ok!
+        // read new line and process new children variable
         for (int i = 0; i < data.count - COUNT_CONST && fgets(inp, MAXSIZE*MAXSIZE, fr) && isVariable(inp); i++) {
             cleanInput(inp);  // clean it
 
             char varName[MAXSIZE] = { 0 };  // variable's name
             int start = 0;  // pointer for changing input to expression
             getSymbols(inp, varName, &start);  // get the name of the variable
-            char input[MAXSIZE]; // additional input string for cutting (so that original inp had a "=" sign)
-            strcpy(input, inp);
-            toExpression(input, &start);
 
-            int pos = inData(varName, &data);  // search the position of variable in Data
+            // additional input string for cutting (so that original inp had a "=" sign)
+            char tempInp[MAXSIZE];
+            strcpy(tempInp, inp);
+            toExpression(tempInp, &start);
+
+            // search the position of variable in Data and add it, if there is no such variable
+            int pos = inData(varName, &data);
             if (pos == data.count){
                 addVar(varName, &data);
             }
 
+            // checking for redefinition of variable
             if (data.variables[pos].polish[0][0] == '\0') {
-                createRPN(&data.variables[pos], input);  // create RPN for the variable
+                createRPN(&data.variables[pos], tempInp);  // create RPN for the variable
+
                 if (data.variables[pos].polish[0][0] == '\0') {
                     fprintf(fw, "%s can't be defined properly, because it points to itself.\n", varName);
                     --i;
@@ -376,40 +426,30 @@ int main() {
             }
         }
 
-        defineConst(&data);
-        // calculate RPN for every variable
-        for (int i = 0; i < data.count; ++i) {
-            int flag = 0;
-            for (int j = 0; j < data.count; ++j) {
-                if (data.variables[j].countUnknown == 0
-                    && data.variables[j].isDefined == 0
-                    && data.variables[j].polish[0][0] != '\0') {
-                    flag++;
-                    calculateRPN(&data.variables[j]);
-                    defineVar(&data.variables[j]);
-                    printAnswer(&data.variables[j]);
-                }
-            }
-            if (flag == 0){
-                break;
-            }
-        }
+        defineConstants(&data);
 
+        // calculate RPN for every variable
+        calculateAllDataVariables();
+
+        // if there is no unknown vars for mainExp - calculate it and print the answer
         if (mainExp.countUnknown == 0) {
-            // calculate RPN (reversed polish notation)
             calculateRPN(&mainExp);
 
-            // print out the result in output.txt file
             printAnswer(&mainExp);
             inp[0] = 0;
         }
         else {
+            // throw a problem in output
             fprintf(fw, "Expression %d can't be calculated.\n", countExp-1);
+
+            // show bad guys, if they exist
             for (int i = 0; i < mainExp.countChildren; ++i) {
                 if (mainExp.childrenVars[i]->isDefined == 0) {
                     fprintf(fw, "Variable %s is not defined.\n", mainExp.childrenVars[i]->name);
                 }
             }
+
+            // if it's already problem input - let's stop this circus
             if (strcmp(inp, previousInp) == 0) {
                 inp[0] = 0;
             }
