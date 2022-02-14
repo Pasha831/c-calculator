@@ -79,7 +79,7 @@ void getNumber(char* inp, char polish[MAXSIZE][MAXSIZE], int *m, int *i){
 // adding symbols (of function or variable) from input to string
 void getSymbols(char* inp, char* str, int* i){
     int count = 0;
-    while (inp[*i] && inOperators(&inp[*i]) == -1){  // reading symbols from input until an operator is found
+    while (inp[*i] && inOperators(&inp[*i]) == -1 && inp[*i] != ' '){  // reading symbols from input until an operator is found
         str[count++] = inp[(*i)++];
     }
     str[count] = 0; // end of string
@@ -219,7 +219,6 @@ int cleanInput(char* inp){
     }
 
     strcpy(inp, cleanedInput);
-    printf( "%s\n", inp);
     return 0;
 }
 
@@ -535,7 +534,7 @@ void readAndDefineVariables(Data *data, FILE *fr, FILE *fw, char *inp) {
 void printMainExpression(Var *mainExp, Data *data, FILE *fw, char *inp, char *previousInp, int *countExp) {
     if (mainExp->countUnknown == 0 && mainExp->polish[0][0] != '\0') {
         calculateRPN(mainExp, data, fw);
-
+        fprintf(fw, "Expression interpreted as:\n%s\n", inp);
         printAnswer(mainExp, fw);
         inp[0] = 0;
     }
@@ -578,7 +577,7 @@ int errorCheck(FILE *fw, int error) {
                        "Meaningless comma."};
     if (error != 0) {
         fprintf(fw, "Main expression cannot be interpreted properly.\n");
-        fprintf(fw, "%s\n", errors[error]);
+        fprintf(fw, "%s\n\n", errors[error]);
         return 1;
     }
     return 0;

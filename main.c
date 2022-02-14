@@ -31,7 +31,7 @@ int main() {
 
         // check wrong bracket sequence: calculate if is OK, otherwise continue and clean input
         if (!bracketSequence(inp)) {
-            fprintf(fw, "Wrong bracket sequence or extra comma.\n");
+            fprintf(fw, "Wrong bracket sequence.\n\n");
             inp[0] = 0;
             continue;
         }
@@ -41,7 +41,6 @@ int main() {
             continue;
         }
         strcpy(previousInp, inp);
-
         // create RPN from input expression
         createRPN(&mainExp, inp, &data);
 
