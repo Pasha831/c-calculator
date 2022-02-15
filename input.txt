@@ -1,0 +1,56 @@
+(1-1j)/5
+
+a/(b+c)
+a = 5
+b = 1
+c = 4
+
+pow[2,log(1000)]
+
+23+32*(123*(34/2)
+
+e^(PI*j)
+
+log(a)
+a = 1
+
+phase(1+j)
+
+a+b
+a = 1 +j
+b = -1 -j
+
+23-16+45*2
+
+(abc + xxx*2)/(z^3*(asd- 50))
+abc = 5.34
+xxx = -97.12
+z = 23.23
+asd = -2.5
+
+exp(-j*PI*alpha*len/v0)
+alpha = sqrt(PI*len/(s1+s2))
+s1 = cos(real(S11)*real(S22))
+s2 = (sin(imag(S11*S22)))^2
+len = 191.76
+v0 = 299.799
+S11 = -0.01-0.92j
+S22 = 0.0001+0.997j
+
+exp(-j PI alpha len/v0)
+alpha = sqrt(PI len/(s1+s2))
+s1 = cos(real(S11)real(S22))
+s2 = (sin imag(S11*S22))^2
+len = 191.76
+v0 = 299.799
+S11 = ---0.01-0.92j
+S22 = 0.0001+0.997j
+
+-(log ((ln (exp  100  * exp 10 )-10)abs(---10)*tg ln exp(1) )-log(sin ln ( exp 1 )/cos ( ln ( exp(1))) )) ^ 2 + -2
+
+a + b / c
+a = d -e
+b = 7.4
+d = 5.6
+c = 0
+
