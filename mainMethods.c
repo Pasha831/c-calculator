@@ -118,7 +118,7 @@ int cleanInput(char* inp){
             countMinus++;
         }
         else if (countMinus) {
-            while (countMinus > 0 && countBracketMinus[countFunc] == 0 && inp[i] != '(' && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
+            while (countMinus > 0 && countBracketMinus[countMinus] == 0 && inp[i] != '(' && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
                 cleanedInput[count++] = ')';
                 countMinus--;
             }

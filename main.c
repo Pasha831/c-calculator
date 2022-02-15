@@ -3,8 +3,8 @@
 
 int main() {
     // input here your own files destination
-    FILE *fr = fopen("D:\\CLionProjects\\c-calculator\\input.txt", "rt");
-    FILE *fw = fopen("D:\\CLionProjects\\c-calculator\\output.txt", "wt");
+    FILE *fr = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
+    FILE *fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
 
     Data data;  // storage of variables
 
