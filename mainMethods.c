@@ -90,7 +90,7 @@ void getSymbols(char* inp, char* str, int* i){
 int cleanInput(char* inp){
     char cleanedInput[MAXSIZE*MAXSIZE] = { 0 };
     int count = 0;
-    int countBracket[MAXSIZE] = {0};
+    int countBracketFunc[MAXSIZE] = {0};
     int withBracket[MAXSIZE] = {0};
     int countPow = 0;
     int countFunc = 0;
@@ -100,8 +100,37 @@ int cleanInput(char* inp){
     int isNum = 0; // it's awful, but lawful
     int dot = 0;
     int start = 0;
+    int countMinus = 0;
+    int countBracketMinus[MAXSIZE] = {0};
     for (int i = 0; inp[i] != '\0' && inp[i] != '\n'; ++i){
+        if ((inOperators(&inp[i]) != -1 && inp[i] != '(' && inp[i] != ')'&& cleanedInput[count-1] != ')' &&
+        cleanedInput[count-1] != '(' && inOperators(&cleanedInput[count-1]) != -1 && inp[i] != '-') ||
+        (inp[i] == ')' && cleanedInput[count-1] == '(')) {
+            inp[0] = 0;
+            return 5;
+        }
+        if (inp[i] == '(' && cleanedInput[count-1] == ')') {
+            cleanedInput[count++] = '*';
+        }
+
+        if (inp[i] == '-' && count != 0 && inOperators(&cleanedInput[count-1]) != -1 && cleanedInput[count-1] != ')' && cleanedInput[count-1] != '(') {
+            cleanedInput[count++] = '(';
+            countMinus++;
+        }
+        else if (countMinus) {
+            while (countMinus > 0 && countBracketMinus[countFunc] == 0 && inp[i] != '(' && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
+                cleanedInput[count++] = ')';
+                countMinus--;
+            }
+            if (inp[i] == '(') {
+                countBracketMinus[countMinus]++;
+            } else if (inp[i] == ')') {
+                countBracketMinus[countMinus]--;
+            }
+        }
+
         if (count != 0 && (inp[i] >= '0' && inp[i] <= '9') && (cleanedInput[count-1] == ')' || (isVar && inp[i-1] == ' '))) {
+            isVar = 0;
             cleanedInput[count++] = '*';
         }
 
@@ -141,7 +170,7 @@ int cleanInput(char* inp){
             if (inp[i] == '(') {
                 isFunc = 0;
                 withBracket[countFunc] = 1;
-                countBracket[countFunc]++;
+                countBracketFunc[countFunc]++;
             } else if (inOperators(&inp[i]) != -1) {
                 inp[0] = 0;
                 return 2;
@@ -152,17 +181,17 @@ int cleanInput(char* inp){
             }
         }
         else if (countFunc) {
-            while (countFunc > 0 && countBracket[countFunc] == 0 && inp[i] != '(' && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
+            while (countFunc > 0 && countBracketFunc[countFunc] == 0 && inp[i] != '(' && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
                 if (withBracket[countFunc] == 0) {
                     cleanedInput[count++] = ')';
                 }
                 countFunc--;
             }
             if (inp[i] == '(') {
-                countBracket[countFunc]++;
+                countBracketFunc[countFunc]++;
             }
             else if (inp[i] == ')') {
-                countBracket[countFunc]--;
+                countBracketFunc[countFunc]--;
             }
         }
         if (countPow && start < i) {
@@ -195,6 +224,9 @@ int cleanInput(char* inp){
             }
             getSymbols(inp, str, &start);
             if (inFunctions(str) != -1) {
+                if (cleanedInput[count-1] == ')') {
+                    cleanedInput[count++] = '*';
+                }
                 isFunc = 1;
                 countFunc++;
             }
@@ -221,6 +253,9 @@ int cleanInput(char* inp){
             cleanedInput[count++] = ')';
         }
     }
+    while (countMinus-- > 0) {
+        cleanedInput[count++] = ')';
+    }
 
     strcpy(inp, cleanedInput);
     return 0;
@@ -243,7 +278,8 @@ void createRPN(Var* currentVar, char inp[MAXSIZE], Data *data) {
     int k = 0;  // pointer for stack
 
     for (int i = 0; i < strlen(inp); i++) {
-        if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || inp[i] == 'j') {  // is a part of a digit?
+        if ((inp[i] >= '0' && inp[i] <= '9') || inp[i] == '.' || (inp[i] == 'j' &&
+        !((inp[i+1] >= 'a' && inp[i+1] <= 'z') || (inp[i+1] >= 'A' && inp[i+1] <= 'Z')))) {  // is a part of a digit?
             getNumber(inp, currentVar->polish, &currentVar->countPolish, &i);
         }
         else if (inOperators(&inp[i]) != -1) {
@@ -350,7 +386,9 @@ void calculateRPN(Var* currentVar, Data *data, FILE *fw) {
 
     // process RPN
     for (int i = 0; i < currentVar->countPolish; ++i){
-        if ((currentVar->polish[i][0] >= '0' && currentVar->polish[i][0] <= '9') || currentVar->polish[i][0] == 'j') {
+        if ((currentVar->polish[i][0] >= '0' && currentVar->polish[i][0] <= '9') || (currentVar->polish[i][0] == 'j' &&
+        !((currentVar->polish[i][1] >= 'a' && currentVar->polish[i][1] <= 'z') || (currentVar->polish[i][1] >= 'A'
+        && currentVar->polish[i][1] <= 'Z')))) {
             if (currentVar->polish[i][strlen(currentVar->polish[i])-1] == 'j') {  // if number is imaginary
                 stack[count] = strtod(currentVar->polish[i], 0) * I;
 
@@ -574,11 +612,12 @@ void printMainExpression(Var *mainExp, Data *data, FILE *fw, char *inp, char *pr
 }
 
 int errorCheck(FILE *fw, int error) {
-    char* errors[5] = {"No errors.",
+    char* errors[6] = {"No errors.",
                        "Superfluous comma or stop in number.",
                        "Function doesn't have any arguments.",
                        "Function <pow> needs brackets." ,
-                       "Meaningless comma."};
+                       "Meaningless comma.",
+                       "Two operators in a row."};
     if (error != 0) {
         fprintf(fw, "Main expression cannot be interpreted properly.\n");
         fprintf(fw, "%s\n\n", errors[error]);
