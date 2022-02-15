@@ -3,8 +3,8 @@
 
 int main() {
     // input here your own files destination
-    FILE *fr = fopen("C:\\users\\ageev\\CLionProject\\c-calculator\\c-calculator\\input.txt", "rt");
-    FILE *fw = fopen("C:\\Users\\ageev\\CLionProject\\c-calculator\\c-calculator\\output.txt", "wt");
+    FILE *fr = fopen("D:\\CLionProjects\\c-calculator\\input.txt", "rt");
+    FILE *fw = fopen("D:\\CLionProjects\\c-calculator\\output.txt", "wt");
 
     Data data;  // storage of variables
 
@@ -35,11 +35,13 @@ int main() {
             inp[0] = 0;
             continue;
         }
+
         // clean input from spaces and '\n'
         int error = cleanInput(inp);
         if (errorCheck(fw, error)) {
             continue;
         }
+
         strcpy(previousInp, inp);
         // create RPN from input expression
         createRPN(&mainExp, inp, &data);
