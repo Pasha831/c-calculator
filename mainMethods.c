@@ -101,11 +101,11 @@ int cleanInput(char* inp){
     int dot = 0;
     int start = 0;
     for (int i = 0; inp[i] != '\0' && inp[i] != '\n'; ++i){
-        if (count != 0 && (inp[i] >= '0' && inp[i] <= '9') && cleanedInput[count-1] == ')') {
+        if (count != 0 && (inp[i] >= '0' && inp[i] <= '9') && (cleanedInput[count-1] == ')' || (isVar && inp[i-1] == ' '))) {
             cleanedInput[count++] = '*';
         }
 
-        if ((inp[i] >= '0' && inp[i] <= '9') && (count == 0 || inOperators(&cleanedInput[count-1]) != -1)){
+        if ((inp[i] >= '0' && inp[i] <= '9') && (count == 0 || isFunc || inOperators(&cleanedInput[count-1]) != -1)){
             dot = 0;
             isNum = 1;
         }
@@ -152,7 +152,7 @@ int cleanInput(char* inp){
             }
         }
         else if (countFunc) {
-            while (countFunc > 0 && countBracket[countFunc] == 0 && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
+            while (countFunc > 0 && countBracket[countFunc] == 0 && inp[i] != '(' && (inp[i] == ')' || inOperators(&inp[i]) != -1)) {
                 if (withBracket[countFunc] == 0) {
                     cleanedInput[count++] = ')';
                 }
@@ -186,9 +186,13 @@ int cleanInput(char* inp){
             return 4;
         }
 
-        if (((inp[i] >= 'a' && inp[i] <= 'z') || (inp[i] >= 'A' && inp[i] <= 'Z')) && (count == 0 || inOperators(&cleanedInput[count-1]) != -1)) {
+        if (((inp[i] >= 'a' && inp[i] <= 'z') || (inp[i] >= 'A' && inp[i] <= 'Z')) && (count == 0 || (isVar && inp[i-1] == ' ') || inOperators(&cleanedInput[count-1]) != -1)) {
             start = i;
             char str[MAXSIZE];
+            if (isVar) {
+                cleanedInput[count++] = '*';
+                isVar = 0;
+            }
             getSymbols(inp, str, &start);
             if (inFunctions(str) != -1) {
                 isFunc = 1;
@@ -534,7 +538,7 @@ void readAndDefineVariables(Data *data, FILE *fr, FILE *fw, char *inp) {
 void printMainExpression(Var *mainExp, Data *data, FILE *fw, char *inp, char *previousInp, int *countExp) {
     if (mainExp->countUnknown == 0 && mainExp->polish[0][0] != '\0') {
         calculateRPN(mainExp, data, fw);
-        fprintf(fw, "Expression interpreted as:\n%s\n", inp);
+        fprintf(fw, "Expression interpreted as:\n%s\n", previousInp);
         printAnswer(mainExp, fw);
         inp[0] = 0;
     }
