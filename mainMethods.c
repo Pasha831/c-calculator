@@ -214,6 +214,10 @@ int cleanInput(char* inp){
             inp[0] = 0;
             return 4;
         }
+        if (!isNum && inp[i] == '.') {
+            inp[0] = 0;
+            return 4;
+        }
 
         if (((inp[i] >= 'a' && inp[i] <= 'z') || (inp[i] >= 'A' && inp[i] <= 'Z')) && (count == 0 || (isVar && inp[i-1] == ' ') || inOperators(&cleanedInput[count-1]) != -1)) {
             start = i;
@@ -616,7 +620,7 @@ int errorCheck(FILE *fw, int error) {
                        "Superfluous comma or stop in number.",
                        "Function doesn't have any arguments.",
                        "Function <pow> needs brackets." ,
-                       "Meaningless comma.",
+                       "Meaningless comma or full stop.",
                        "Two operators in a row."};
     if (error != 0) {
         fprintf(fw, "Main expression cannot be interpreted properly.\n");
