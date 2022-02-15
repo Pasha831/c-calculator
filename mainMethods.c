@@ -151,6 +151,9 @@ int cleanInput(char* inp){
                     dot = 1;
                 }
             }
+            else if (inp[i] == ',' && countPow != 0) {
+                isNum = 0;
+            }
             else if (isNum && (inp[i] == '(' || (inp[i] >= 'a' && inp[i] <= 'z') || (inp[i] >= 'A' && inp[i] <= 'Z'))) {
                 cleanedInput[count++] = '*';
                 isNum = 0;
@@ -194,7 +197,7 @@ int cleanInput(char* inp){
                 countBracketFunc[countFunc]--;
             }
         }
-        if (countPow && start < i) {
+        if (countPow && (start < i || isVar == 1)) {
             if (isPow && inp[i] != '(' && inp[i] != ' ') {
                 inp[0] = 0;
                 return 3;
@@ -203,11 +206,12 @@ int cleanInput(char* inp){
                 isPow = 0;
             }
             else if (inp[i] == ',') {
+                isVar = 0;
                 cleanedInput[count++] = ')';
                 cleanedInput[count++] = '^';
                 cleanedInput[count++] = '(';
-                i++;
                 countPow--;
+                continue;
             }
         }
         else if (!isNum && !countPow && inp[i] == ',') {
